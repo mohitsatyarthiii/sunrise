@@ -1,14 +1,14 @@
 // app/news/page.js
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { 
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
   Newspaper,
   Globe,
   Calendar,
@@ -24,128 +24,146 @@ import {
   Package,
   DollarSign,
   AlertCircle,
-  Sparkles
-} from 'lucide-react'
+  Sparkles,
+} from "lucide-react";
 
 export default function NewsPage() {
-  const [news, setNews] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('import export')
-  const [page, setPage] = useState(1)
-  const [totalArticles, setTotalArticles] = useState(0)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("import export");
+  const [page, setPage] = useState(1);
+  const [totalArticles, setTotalArticles] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const categories = [
-    { id: 'import export', name: 'All Trade News', icon: <Globe className="h-4 w-4" /> },
-    { id: 'shipping', name: 'Shipping & Logistics', icon: <Ship className="h-4 w-4" /> },
-    { id: 'trade war', name: 'Trade Wars', icon: <TrendingUp className="h-4 w-4" /> },
-    { id: 'export restrictions', name: 'Export Restrictions', icon: <Package className="h-4 w-4" /> },
-    { id: 'customs duties', name: 'Customs & Duties', icon: <DollarSign className="h-4 w-4" /> },
-    { id: 'uae trade', name: 'UAE Trade', icon: <Globe className="h-4 w-4" /> }
-  ]
+    {
+      id: "import export",
+      name: "All Trade News",
+      icon: <Globe className="h-4 w-4" />,
+    },
+    {
+      id: "shipping",
+      name: "Shipping & Logistics",
+      icon: <Ship className="h-4 w-4" />,
+    },
+    {
+      id: "trade war",
+      name: "Trade Wars",
+      icon: <TrendingUp className="h-4 w-4" />,
+    },
+    {
+      id: "export restrictions",
+      name: "Export Restrictions",
+      icon: <Package className="h-4 w-4" />,
+    },
+    {
+      id: "customs duties",
+      name: "Customs & Duties",
+      icon: <DollarSign className="h-4 w-4" />,
+    },
+    { id: "uae trade", name: "UAE Trade", icon: <Globe className="h-4 w-4" /> },
+  ];
 
   const fetchNews = async (resetPage = true) => {
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      const API_KEY = process.env.NEXT_PUBLIC_GNEWS_API_KEY
-      const query = searchQuery || selectedCategory
-      
-      // GNews API endpoint
-      const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${API_KEY}&page=${resetPage ? 1 : page}`
-      
-      const response = await fetch(url)
-      const data = await response.json()
-      
+      const query = searchQuery || selectedCategory;
+
+      const response = await fetch(
+        `/api/news?q=${encodeURIComponent(query)}&page=${resetPage ? 1 : page}`,
+      );
+
+      const data = await response.json();
+
       if (data.errors) {
-        throw new Error(data.errors.join(', '))
+        throw new Error(data.errors.join(", "));
       }
-      
+
       if (resetPage) {
-        setNews(data.articles || [])
-        setPage(1)
+        setNews(data.articles || []);
+        setPage(1);
       } else {
-        setNews(prev => [...prev, ...(data.articles || [])])
-        setPage(prev => prev + 1)
+        setNews((prev) => [...prev, ...(data.articles || [])]);
+        setPage((prev) => prev + 1);
       }
-      
-      setTotalArticles(data.totalArticles || 0)
-      setLastUpdated(new Date().toLocaleString())
-      
+
+      setTotalArticles(data.totalArticles || 0);
+      setLastUpdated(new Date().toLocaleString());
     } catch (err) {
-      setError(err.message || 'Failed to fetch news')
-      console.error('News fetch error:', err)
+      setError(err.message || "Failed to fetch news");
+      console.error("News fetch error:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Initial fetch
   useEffect(() => {
-    fetchNews(true)
-  }, [selectedCategory])
+    fetchNews(true);
+  }, [selectedCategory]);
 
   // Handle search
   const handleSearch = (e) => {
-    e.preventDefault()
-    fetchNews(true)
-  }
+    e.preventDefault();
+    fetchNews(true);
+  };
 
   // Load more
   const loadMore = () => {
-    fetchNews(false)
-  }
+    fetchNews(false);
+  };
 
   // Refresh news
   const refreshNews = () => {
-    fetchNews(true)
-  }
+    fetchNews(true);
+  };
 
   // Format date
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now - date)
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
-    const diffMinutes = Math.floor(diffTime / (1000 * 60))
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
     if (diffMinutes < 60) {
-      return `${diffMinutes} minutes ago`
+      return `${diffMinutes} minutes ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} hours ago`
+      return `${diffHours} hours ago`;
     } else if (diffDays === 1) {
-      return 'Yesterday'
+      return "Yesterday";
     } else if (diffDays < 7) {
-      return `${diffDays} days ago`
+      return `${diffDays} days ago`;
     } else {
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      })
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     }
-  }
+  };
 
   // Truncate text
   const truncateText = (text, maxLength) => {
-    if (!text) return ''
-    if (text.length <= maxLength) return text
-    return text.substr(0, maxLength) + '...'
-  }
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substr(0, maxLength) + "...";
+  };
 
   // Get source favicon
   const getSourceFavicon = (url) => {
     try {
-      const domain = new URL(url).hostname
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+      const domain = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
     } catch {
-      return null
+      return null;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -167,9 +185,10 @@ export default function NewsPage() {
               <span className="block text-blue-300">News & Updates</span>
             </h1>
             <p className="text-xl text-blue-100 max-w-2xl mb-6">
-              Stay updated with the latest import-export news, trade policies, and market trends from around the world.
+              Stay updated with the latest import-export news, trade policies,
+              and market trends from around the world.
             </p>
-            
+
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="max-w-2xl">
               <div className="relative">
@@ -181,7 +200,7 @@ export default function NewsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-32 py-6 text-lg bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                 />
-                <Button 
+                <Button
                   type="submit"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white text-blue-600 hover:bg-gray-100"
                 >
@@ -210,13 +229,13 @@ export default function NewsPage() {
               <button
                 key={cat.id}
                 onClick={() => {
-                  setSelectedCategory(cat.id)
-                  setSearchQuery('')
+                  setSelectedCategory(cat.id);
+                  setSearchQuery("");
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                   selectedCategory === cat.id && !searchQuery
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 {cat.icon}
@@ -230,7 +249,9 @@ export default function NewsPage() {
               className="ml-auto shrink-0"
               title="Refresh news"
             >
-              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -252,7 +273,9 @@ export default function NewsPage() {
             <Card className="border-0 shadow-lg bg-red-50">
               <CardContent className="p-8 text-center">
                 <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-red-700 mb-2">Failed to load news</h3>
+                <h3 className="text-2xl font-bold text-red-700 mb-2">
+                  Failed to load news
+                </h3>
                 <p className="text-red-600 mb-4">{error}</p>
                 <Button onClick={refreshNews} variant="outline">
                   Try Again
@@ -271,7 +294,10 @@ export default function NewsPage() {
           {/* News Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {news.map((article, index) => (
-              <Card key={index} className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+              <Card
+                key={index}
+                className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden"
+              >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
                   {article.image ? (
@@ -281,7 +307,8 @@ export default function NewsPage() {
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
                       }}
                     />
                   ) : (
@@ -289,12 +316,12 @@ export default function NewsPage() {
                       <Newspaper className="h-12 w-12 text-white/50" />
                     </div>
                   )}
-                  
+
                   {/* Source Badge */}
                   <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-2">
                     {getSourceFavicon(article.url) && (
-                      <img 
-                        src={getSourceFavicon(article.url)} 
+                      <img
+                        src={getSourceFavicon(article.url)}
                         alt=""
                         className="w-4 h-4 rounded-full"
                       />
@@ -356,10 +383,13 @@ export default function NewsPage() {
                 <p className="text-gray-500 mb-6">
                   Try adjusting your search or category to find trade news.
                 </p>
-                <Button onClick={() => {
-                  setSelectedCategory('import export')
-                  setSearchQuery('')
-                }} variant="outline">
+                <Button
+                  onClick={() => {
+                    setSelectedCategory("import export");
+                    setSearchQuery("");
+                  }}
+                  variant="outline"
+                >
                   View All News
                 </Button>
               </CardContent>
@@ -367,25 +397,28 @@ export default function NewsPage() {
           )}
 
           {/* Load More */}
-          {!loading && !error && news.length > 0 && news.length < totalArticles && (
-            <div className="text-center mt-8">
-              <Button
-                onClick={loadMore}
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>Loading...</>
-                ) : (
-                  <>
-                    Load More News
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+          {!loading &&
+            !error &&
+            news.length > 0 &&
+            news.length < totalArticles && (
+              <div className="text-center mt-8">
+                <Button
+                  onClick={loadMore}
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>Loading...</>
+                  ) : (
+                    <>
+                      Load More News
+                      <ChevronRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
         </div>
       </section>
 
@@ -401,7 +434,8 @@ export default function NewsPage() {
               Stay Ahead in <span className="text-blue-600">Global Trade</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Get real-time updates on trade policies, market trends, and opportunities
+              Get real-time updates on trade policies, market trends, and
+              opportunities
             </p>
           </div>
 
@@ -412,7 +446,9 @@ export default function NewsPage() {
                   <Globe className="h-8 w-8 text-blue-600" />
                 </div>
                 <h3 className="font-bold mb-2">Daily Updates</h3>
-                <p className="text-sm text-gray-600">Fresh news every day from 50,000+ sources</p>
+                <p className="text-sm text-gray-600">
+                  Fresh news every day from 50,000+ sources
+                </p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-lg text-center">
@@ -421,7 +457,9 @@ export default function NewsPage() {
                   <TrendingUp className="h-8 w-8 text-green-600" />
                 </div>
                 <h3 className="font-bold mb-2">Market Trends</h3>
-                <p className="text-sm text-gray-600">Real-time updates on trade flows and prices</p>
+                <p className="text-sm text-gray-600">
+                  Real-time updates on trade flows and prices
+                </p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-lg text-center">
@@ -430,7 +468,9 @@ export default function NewsPage() {
                   <Ship className="h-8 w-8 text-purple-600" />
                 </div>
                 <h3 className="font-bold mb-2">Shipping Updates</h3>
-                <p className="text-sm text-gray-600">Port news, routes, and logistics updates</p>
+                <p className="text-sm text-gray-600">
+                  Port news, routes, and logistics updates
+                </p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-lg text-center">
@@ -439,7 +479,9 @@ export default function NewsPage() {
                   <DollarSign className="h-8 w-8 text-orange-600" />
                 </div>
                 <h3 className="font-bold mb-2">Trade Policies</h3>
-                <p className="text-sm text-gray-600">Customs, duties, and regulation changes</p>
+                <p className="text-sm text-gray-600">
+                  Customs, duties, and regulation changes
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -449,7 +491,9 @@ export default function NewsPage() {
       {/* Newsletter Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Never Miss Important Trade News</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Never Miss Important Trade News
+          </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Subscribe to get daily trade news updates directly in your inbox
           </p>
@@ -471,5 +515,5 @@ export default function NewsPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
