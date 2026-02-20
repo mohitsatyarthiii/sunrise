@@ -251,7 +251,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-400">
               © {new Date().getFullYear()} Sunrise Impex. All rights reserved. 
-              Made with ❤️ in UAE
+              Maintained and managed by <a href="https://editvo.com" className="text-blue-400 hover:underline">Editvo</a>.
             </p>
             <div className="flex gap-6 text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-blue-400 transition-colors">

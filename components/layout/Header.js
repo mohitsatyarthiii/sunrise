@@ -336,22 +336,6 @@ export default function Header() {
                         Home
                       </Link>
                       
-                      <div className="px-4 py-2">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                          Categories
-                        </p>
-                        <div className="space-y-1">
-                          {categories.map((cat) => (
-                            <Link
-                              key={cat.name}
-                              href={cat.href}
-                              className="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              {cat.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
 
                       <Link
                         href="/products"
@@ -373,6 +357,28 @@ export default function Header() {
                         }`}
                       >
                         About Us
+                      </Link>
+
+                      <Link
+                        href="/news"
+                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                          pathname === '/news' 
+                            ? 'bg-blue-50 text-blue-600' 
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        News
+                      </Link>
+
+                      <Link
+                        href="/blog"
+                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                          pathname === '/blog' 
+                            ? 'bg-blue-50 text-blue-600' 
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        Blogs
                       </Link>
 
                       <Link
