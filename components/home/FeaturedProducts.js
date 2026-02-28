@@ -3,40 +3,43 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+// ❌ Ye line hatao: import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCart } from '@/context/CartContext'
-import { ShoppingCart, Eye } from 'lucide-react'
+import { ShoppingCart, Eye, Package } from 'lucide-react'
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const { addToCart } = useCart()
-  const supabase = createClient()
+  // ❌ Ye line hatao: const supabase = createClient()
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const { data } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories (
-            name,
-            slug
-          )
-        `)
-        .eq('is_featured', true)
-        .eq('is_active', true)
-        .limit(12)
+  // ✅ Naya fetch function
+  const fetchFeaturedProducts = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/products/featured')
       
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const data = await response.json()
       setProducts(data || [])
+    } catch (error) {
+      console.error('Error fetching featured products:', error)
+    } finally {
       setLoading(false)
     }
+  }
 
-    fetchProducts()
+  // ✅ Updated useEffect
+  useEffect(() => {
+    fetchFeaturedProducts()
   }, [])
 
   if (loading) {
@@ -160,6 +163,3 @@ export default function FeaturedProducts() {
     </div>
   )
 }
-
-// Add missing import
-import { Package } from 'lucide-react'

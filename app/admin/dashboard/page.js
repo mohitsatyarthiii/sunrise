@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -55,126 +54,39 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [salesData, setSalesData] = useState([])
   const [categoryData, setCategoryData] = useState([])
-  const supabase = createClient()
+  
+
+  // ✅ Naya fetch dashboard data function
+const fetchDashboardData = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/dashboard')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const data = await response.json()
+    
+    setStats(data.stats)
+    setRecentOrders(data.recentOrders)
+    setRecentEnquiries(data.recentEnquiries)
+    setCategoryData(data.categoryData)
+    setSalesData(data.salesData)
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
+    toast.error('Failed to load dashboard data')
+  } finally {
+    setLoading(false)
+  }
+}
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+  fetchDashboardData()  // ✅ Naya function call
+}, [])
 
-  const fetchDashboardData = async () => {
-    setLoading(true)
-    try {
-      // Products count
-      const { count: products } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-      
-      // Orders count
-      const { count: orders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-      
-      // Pending orders count
-      const { count: pendingOrders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-      
-      // Enquiries count
-      const { count: enquiries } = await supabase
-        .from('enquiries')
-        .select('*', { count: 'exact', head: true })
-      
-      // Users count
-      const { count: users } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-      
-      // Total revenue
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('payment_status', 'paid')
-      
-      const revenue = ordersData?.reduce((sum, order) => sum + order.total_amount, 0) || 0
-
-      // Recent orders
-      const { data: recent } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      // Recent enquiries
-      const { data: enquiries_data } = await supabase
-        .from('enquiries')
-        .select(`
-          *,
-          products:product_id (
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      // Category distribution
-      const { data: productsWithCategories } = await supabase
-        .from('products')
-        .select(`
-          id,
-          categories (
-            name
-          )
-        `)
-
-      const categoryCounts = {}
-      productsWithCategories?.forEach(p => {
-        const catName = p.categories?.name || 'Uncategorized'
-        categoryCounts[catName] = (categoryCounts[catName] || 0) + 1
-      })
-
-      const catData = Object.entries(categoryCounts).map(([name, value]) => ({
-        name,
-        value
-      }))
-
-      // Mock sales data for demo
-      const mockSales = [
-        { name: 'Jan', sales: 4000 },
-        { name: 'Feb', sales: 3000 },
-        { name: 'Mar', sales: 5000 },
-        { name: 'Apr', sales: 4500 },
-        { name: 'May', sales: 6000 },
-        { name: 'Jun', sales: 5500 },
-        { name: 'Jul', sales: 7000 },
-      ]
-
-      setStats({
-        products: products || 0,
-        orders: orders || 0,
-        enquiries: enquiries || 0,
-        users: users || 0,
-        revenue,
-        pendingOrders: pendingOrders || 0,
-        lowStock: 5 // Mock data
-      })
-      setRecentOrders(recent || [])
-      setRecentEnquiries(enquiries_data || [])
-      setCategoryData(catData)
-      setSalesData(mockSales)
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+ 
 
   const statCards = [
     {

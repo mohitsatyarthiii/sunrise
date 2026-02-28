@@ -40,47 +40,56 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const supabase = createClient()
+  
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
-  const fetchUsers = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setUsers(data || [])
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      toast.error('Failed to load users')
-    } finally {
-      setLoading(false)
+ // ✅ Naya fetch users function
+const fetchUsers = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/users')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setUsers(data || [])
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    toast.error('Failed to load users')
+  } finally {
+    setLoading(false)
   }
+}
 
-  const toggleAdmin = async (userId, currentStatus) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_admin: !currentStatus })
-        .eq('id', userId)
-
-      if (error) throw error
-
-      toast.success(`Admin status ${!currentStatus ? 'granted' : 'revoked'}`)
-      fetchUsers()
-    } catch (error) {
-      console.error('Error updating user:', error)
-      toast.error('Failed to update user')
+// ✅ Naya toggle admin function
+const toggleAdmin = async (userId, currentStatus) => {
+  try {
+    const response = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ is_admin: !currentStatus })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    toast.success(`Admin status ${!currentStatus ? 'granted' : 'revoked'}`)
+    fetchUsers() // Refresh list
+  } catch (error) {
+    console.error('Error updating user:', error)
+    toast.error(error.message || 'Failed to update user')
   }
-
+}
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

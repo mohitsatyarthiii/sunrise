@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,7 +24,6 @@ import {
 
 export default function ProductForm({ productId = null }) {
   const router = useRouter()
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState([])
@@ -47,33 +45,40 @@ export default function ProductForm({ productId = null }) {
     meta_description: ''
   })
 
-  useEffect(() => {
-    fetchCategories()
-    if (productId) {
-      fetchProduct()
-    }
-  }, [productId])
-
+  // ✅ Naya fetch categories function
   const fetchCategories = async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-    setCategories(data || [])
+    try {
+      const response = await fetch('/api/admin/products')
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const data = await response.json()
+      setCategories(data || [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      toast.error('Failed to load categories')
+    }
   }
 
-  const fetchProduct = async () => {
+  // ✅ Naya fetch product function
+  const fetchProduct = async (id) => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', productId)
-        .single()
-
-      if (error) throw error
-
+      const response = await fetch(`/api/admin/products/${id}`)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Product not found')
+        }
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const data = await response.json()
+      
       setFormData({
         name: data.name || '',
         slug: data.slug || '',
@@ -81,8 +86,12 @@ export default function ProductForm({ productId = null }) {
         short_description: data.short_description || '',
         category_id: data.category_id || '',
         origin: data.origin || '',
-        images: data.images?.length ? [...data.images, ...Array(4 - data.images.length).fill('')] : ['', '', '', ''],
-        sample_options: data.sample_options || [{ quantity: 1, unit: 'kg', price: 0 }],
+        images: data.images?.length 
+          ? [...data.images, ...Array(Math.max(0, 4 - data.images.length)).fill('')]
+          : ['', '', '', ''],
+        sample_options: data.sample_options?.length 
+          ? data.sample_options 
+          : [{ quantity: 1, unit: 'kg', price: 0 }],
         specifications: data.specifications || {},
         is_featured: data.is_featured || false,
         is_active: data.is_active !== false,
@@ -91,17 +100,97 @@ export default function ProductForm({ productId = null }) {
       })
     } catch (error) {
       console.error('Error fetching product:', error)
-      toast.error('Failed to load product')
+      toast.error(error.message || 'Failed to load product')
+      router.push('/admin/products')
     } finally {
       setLoading(false)
     }
   }
 
+  // ✅ Naya image upload function
+  const uploadImage = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await fetch('/api/admin/products/upload', {
+      method: 'POST',
+      body: formData
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const data = await response.json()
+    return data.url
+  }
+
+  // ✅ Naya save product function
+  const saveProduct = async (data) => {
+    setSaving(true)
+    try {
+      const filteredImages = data.images.filter(img => img && img.trim())
+      const filteredSamples = data.sample_options.filter(opt => opt.price > 0)
+
+      const productData = {
+        name: data.name.trim(),
+        slug: data.slug.trim(),
+        description: data.description?.trim() || null,
+        short_description: data.short_description?.trim() || null,
+        category_id: data.category_id || null,
+        origin: data.origin?.trim() || null,
+        images: filteredImages,
+        sample_options: filteredSamples,
+        specifications: data.specifications || {},
+        is_featured: data.is_featured || false,
+        is_active: data.is_active !== false,
+        meta_title: data.meta_title?.trim() || null,
+        meta_description: data.meta_description?.trim() || null
+      }
+
+      let response
+      if (productId) {
+        response = await fetch(`/api/admin/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        })
+      } else {
+        response = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        })
+      }
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      toast.success(productId ? 'Product updated successfully' : 'Product created successfully')
+      router.push('/admin/products')
+      router.refresh()
+    } catch (error) {
+      console.error('Error saving product:', error)
+      toast.error(error.message || 'Failed to save product')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCategories()
+    if (productId) {
+      fetchProduct(productId)
+    }
+  }, [productId])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
-    // Auto-generate slug from name
     if (name === 'name') {
       setFormData(prev => ({
         ...prev,
@@ -139,28 +228,16 @@ export default function ProductForm({ productId = null }) {
     if (!file) return
 
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `products/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath)
+      const imageUrl = await uploadImage(file)
 
       const newImages = [...formData.images]
-      newImages[index] = publicUrl
+      newImages[index] = imageUrl
       setFormData(prev => ({ ...prev, images: newImages }))
       
       toast.success('Image uploaded successfully')
     } catch (error) {
       console.error('Error uploading image:', error)
-      toast.error('Failed to upload image')
+      toast.error(error.message || 'Failed to upload image')
     }
   }
 
@@ -172,59 +249,7 @@ export default function ProductForm({ productId = null }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setSaving(true)
-
-    try {
-      // Filter out empty images
-      const filteredImages = formData.images.filter(img => img)
-      
-      // Filter out empty sample options
-      const filteredSamples = formData.sample_options.filter(opt => opt.price > 0)
-
-      const productData = {
-        name: formData.name,
-        slug: formData.slug,
-        description: formData.description,
-        short_description: formData.short_description,
-        category_id: formData.category_id || null,
-        origin: formData.origin,
-        images: filteredImages,
-        sample_options: filteredSamples,
-        specifications: formData.specifications,
-        is_featured: formData.is_featured,
-        is_active: formData.is_active,
-        meta_title: formData.meta_title,
-        meta_description: formData.meta_description,
-        updated_at: new Date()
-      }
-
-      let error
-      if (productId) {
-        // Update
-        const { error: updateError } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', productId)
-        error = updateError
-      } else {
-        // Create
-        const { error: insertError } = await supabase
-          .from('products')
-          .insert([productData])
-        error = insertError
-      }
-
-      if (error) throw error
-
-      toast.success(productId ? 'Product updated successfully' : 'Product created successfully')
-      router.push('/admin/products')
-      router.refresh()
-    } catch (error) {
-      console.error('Error saving product:', error)
-      toast.error(error.message || 'Failed to save product')
-    } finally {
-      setSaving(false)
-    }
+    await saveProduct(formData)
   }
 
   if (loading) {
@@ -234,6 +259,8 @@ export default function ProductForm({ productId = null }) {
       </div>
     )
   }
+
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(request) {
   const body = await request.text()
@@ -30,7 +30,7 @@ export async function POST(request) {
     )
   }
 
-  const supabase = createClient()
+  const supabase = createServerSupabaseClient()
 
   // Handle different event types
   switch (event.type) {
@@ -86,9 +86,6 @@ async function handlePaymentIntentSucceeded(paymentIntent, supabase) {
     }
 
     console.log(`Payment succeeded for order: ${orderId}`)
-
-    // You can also send email notification here
-    // await sendOrderConfirmationEmail(orderId)
 
   } catch (error) {
     console.error('Error handling payment success:', error)

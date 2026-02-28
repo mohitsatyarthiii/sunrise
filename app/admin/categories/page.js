@@ -54,91 +54,133 @@ export default function AdminCategoriesPage() {
     description: '',
     is_active: true
   })
-  const supabase = createClient()
-
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const fetchCategories = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-      setCategories(data || [])
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      toast.error('Failed to load categories')
-    } finally {
-      setLoading(false)
+  
+  // ✅ Naya fetch categories function
+const fetchCategories = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/categories')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setCategories(data || [])
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    toast.error('Failed to load categories')
+  } finally {
+    setLoading(false)
+  }
+}
+
+// ✅ Naya create category function
+const createCategory = async (categoryData) => {
+  const response = await fetch('/api/admin/categories', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(categoryData)
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
+
+// ✅ Naya update category function
+const updateCategory = async (id, categoryData) => {
+  const response = await fetch(`/api/admin/categories/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(categoryData)
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
+
+// ✅ Naya delete category function
+const deleteCategory = async (id) => {
+  const response = await fetch(`/api/admin/categories/${id}`, {
+    method: 'DELETE'
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
+
+ useEffect(() => {
+  fetchCategories()  // ✅ Naya function call
+}, [])
+
+  
+
+ const handleSubmit = async () => {
+  if (!formData.name) {
+    toast.error('Category name is required')
+    return
   }
 
-  const handleSubmit = async () => {
-    if (!formData.name) {
-      toast.error('Category name is required')
-      return
+  try {
+    if (dialog.mode === 'add') {
+      // ✅ Create via API
+      await createCategory({
+        name: formData.name,
+        slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: formData.description,
+        is_active: formData.is_active
+      })
+      toast.success('Category created successfully')
+    } else {
+      // ✅ Update via API
+      await updateCategory(dialog.data.id, {
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        is_active: formData.is_active
+      })
+      toast.success('Category updated successfully')
     }
 
-    try {
-      if (dialog.mode === 'add') {
-        const { error } = await supabase
-          .from('categories')
-          .insert([{
-            name: formData.name,
-            slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: formData.description,
-            is_active: formData.is_active
-          }])
-
-        if (error) throw error
-        toast.success('Category created successfully')
-      } else {
-        const { error } = await supabase
-          .from('categories')
-          .update({
-            name: formData.name,
-            slug: formData.slug,
-            description: formData.description,
-            is_active: formData.is_active,
-            updated_at: new Date()
-          })
-          .eq('id', dialog.data.id)
-
-        if (error) throw error
-        toast.success('Category updated successfully')
-      }
-
-      setDialog({ open: false, mode: 'add', data: null })
-      setFormData({ name: '', slug: '', description: '', is_active: true })
-      fetchCategories()
-    } catch (error) {
-      console.error('Error saving category:', error)
-      toast.error(error.message)
-    }
+    setDialog({ open: false, mode: 'add', data: null })
+    setFormData({ name: '', slug: '', description: '', is_active: true })
+    fetchCategories()  // Refresh list
+  } catch (error) {
+    console.error('Error saving category:', error)
+    toast.error(error.message)
   }
+}
 
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', deleteDialog.id)
-
-      if (error) throw error
-
-      toast.success('Category deleted successfully')
-      setDeleteDialog({ open: false, id: null })
-      fetchCategories()
-    } catch (error) {
-      console.error('Error deleting category:', error)
-      toast.error(error.message)
-    }
+const handleDelete = async () => {
+  try {
+    // ✅ Delete via API
+    await deleteCategory(deleteDialog.id)
+    
+    toast.success('Category deleted successfully')
+    setDeleteDialog({ open: false, id: null })
+    fetchCategories()  // Refresh list
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    toast.error(error.message)
   }
+}
 
   const openEdit = (category) => {
     setDialog({ open: true, mode: 'edit', data: category })

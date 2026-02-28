@@ -22,31 +22,43 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSample, setSelectedSample] = useState(null)
   const [quantity, setQuantity] = useState(1)
-  const supabase = createClient()
   const { addToCart } = useCart()
   const { user } = useAuth()
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      const { data } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories(name, slug)
-        `)
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single()
-      
-      setProduct(data)
-      if (data?.sample_options?.length > 0) {
-        setSelectedSample(data.sample_options[0])
+  // ✅ Naya fetch function
+const fetchProductBySlug = async (productSlug) => {
+  setLoading(true)
+  try {
+    const response = await fetch(`/api/products/${productSlug}`)
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        setProduct(null)
+        return
       }
-      setLoading(false)
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setProduct(data)
+    
+    if (data?.sample_options?.length > 0) {
+      setSelectedSample(data.sample_options[0])
+    }
+  } catch (error) {
+    console.error('Error fetching product:', error)
+    toast.error('Failed to load product details')
+  } finally {
+    setLoading(false)
+  }
+}
 
-    fetchProduct()
-  }, [slug])
+  useEffect(() => {
+  if (slug) {
+    fetchProductBySlug(slug)  // ✅ Naya function call
+  }
+}, [slug])  // ✅ Ab safe hai
 
   const handleEnquiry = () => {
     if (!user) {

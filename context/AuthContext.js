@@ -1,57 +1,80 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+// ❌ Ye line hatao: import { createClient } from '@/lib/supabase/client'
 
 const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
 
+// ✅ Helper to notify auth changes
+export const notifyAuthChange = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('auth-change'))
+  }
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  // ❌ Ye line hatao: const supabase = createClient()
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+  // ✅ Naya fetch user function
+  const fetchUser = async () => {
+    try {
+      const response = await fetch('/api/auth/user')
       
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-        setProfile(profile)
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
       }
       
+      const data = await response.json()
+      setUser(data.user)
+      setProfile(data.profile)
+    } catch (error) {
+      console.error('Error fetching user:', error)
+      setUser(null)
+      setProfile(null)
+    } finally {
       setLoading(false)
     }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data))
-      } else {
-        setProfile(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
   }
+
+  // ✅ Naya signOut function
+  const signOut = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST'
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      setUser(null)
+      setProfile(null)
+      
+      // Redirect to home
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  // ✅ Updated useEffect
+  useEffect(() => {
+    fetchUser()
+    
+    // Listen for auth changes
+    window.addEventListener('auth-change', fetchUser)
+    
+    return () => {
+      window.removeEventListener('auth-change', fetchUser)
+    }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, signOut }}>

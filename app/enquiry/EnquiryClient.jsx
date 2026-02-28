@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
@@ -17,7 +15,35 @@ export default function EnquiryClient() {
   const productSlug = searchParams.get('product')
 
   const { user, profile } = useAuth()
-  const supabase = createClient()
+  
+  // ✅ Ye naye functions add karo
+const fetchProductBySlug = async (slug) => {
+  try {
+    const response = await fetch(`/api/products?slug=${slug}`)
+    if (!response.ok) throw new Error('Failed to fetch product')
+    const data = await response.json()
+    setProduct(data)
+  } catch (error) {
+    console.error('Error fetching product:', error)
+  }
+}
+
+const submitEnquiry = async (data) => {
+  const response = await fetch('/api/enquiries', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
 
   const [loading, setLoading] = useState(false)
   const [product, setProduct] = useState(null)
@@ -29,29 +55,22 @@ export default function EnquiryClient() {
     message: ''
   })
 
-  useEffect(() => {
-    if (user && profile) {
-      setFormData({
-        name: profile.full_name || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        company: profile.company_name || '',
-        message: ''
-      })
-    }
+ useEffect(() => {
+  if (user && profile) {
+    setFormData({
+      name: profile.full_name || '',
+      email: profile.email || '',
+      phone: profile.phone || '',
+      company: profile.company_name || '',
+      message: ''
+    })
+  }
 
-    if (productSlug) {
-      const fetchProduct = async () => {
-        const { data } = await supabase
-          .from('products')
-          .select('id, name')
-          .eq('slug', productSlug)
-          .single()
-        setProduct(data)
-      }
-      fetchProduct()
-    }
-  }, [user, profile, productSlug])
+  if (productSlug) {
+    // ✅ Yeh change karo - fetchProductBySlug call karo
+    fetchProductBySlug(productSlug)
+  }
+}, [user, profile, productSlug])
 
   const handleChange = (e) => {
     setFormData({
@@ -60,30 +79,27 @@ export default function EnquiryClient() {
     })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+ const handleSubmit = async (e) => {
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      const { error } = await supabase
-        .from('enquiries')
-        .insert([{
-          user_id: user?.id,
-          product_id: product?.id,
-          product_name: product?.name,
-          ...formData
-        }])
+  try {
+    // ✅ Yeh change karo - submitEnquiry use karo
+    await submitEnquiry({
+      user_id: user?.id,
+      product_id: product?.id,
+      product_name: product?.name,
+      ...formData
+    })
 
-      if (error) throw error
-
-      toast.success("Enquiry sent successfully!")
-      router.push('/')
-    } catch (error) {
-      toast.error(error.message)
-    } finally {
-      setLoading(false)
-    }
+    toast.success("Enquiry sent successfully!")
+    router.push('/')
+  } catch (error) {
+    toast.error(error.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">

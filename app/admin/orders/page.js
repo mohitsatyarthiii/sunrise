@@ -45,53 +45,80 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const supabase = createClient()
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
+ useEffect(() => {
+  fetchOrders()  // ✅ Naya function call
+}, [])
 
-  const fetchOrders = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email,
-            phone
-          )
-        `)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setOrders(data || [])
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-      toast.error('Failed to load orders')
-    } finally {
-      setLoading(false)
+// ✅ Naya fetch orders function
+const fetchOrders = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/orders')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setOrders(data || [])
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    toast.error('Failed to load orders')
+  } finally {
+    setLoading(false)
   }
+}
 
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus, updated_at: new Date() })
-        .eq('id', orderId)
-
-      if (error) throw error
-
-      toast.success(`Order status updated to ${newStatus}`)
-      fetchOrders()
-    } catch (error) {
-      console.error('Error updating order:', error)
-      toast.error('Failed to update order status')
+// ✅ Naya update order status function
+const updateOrderStatus = async (orderId, newStatus) => {
+  try {
+    const response = await fetch(`/api/admin/orders/${orderId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: newStatus })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    toast.success(`Order status updated to ${newStatus}`)
+    fetchOrders() // Refresh list
+  } catch (error) {
+    console.error('Error updating order:', error)
+    toast.error('Failed to update order status')
   }
+}
+
+// ✅ Export function
+const handleExport = async () => {
+  try {
+    const response = await fetch(`/api/admin/orders/export?format=csv&status=${statusFilter}`)
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    // Download CSV
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    
+    toast.success('Orders exported successfully')
+  } catch (error) {
+    console.error('Export error:', error)
+    toast.error('Failed to export orders')
+  }
+}
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -112,7 +139,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
           <p className="text-gray-500 mt-1">Manage and track customer orders</p>
         </div>
-        <Button variant="outline">
+        <Button variant="outline " onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Export
         </Button>

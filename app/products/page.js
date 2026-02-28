@@ -124,93 +124,73 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('featured')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   
-  const supabase = createClient()
+ // ✅ Naya fetch functions
+const fetchCategories = async () => {
+  try {
+    const response = await fetch('/api/categories')
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    const data = await response.json()
+    setCategories(data || [])
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    toast.error('Failed to load categories')
+  }
+}
+
+const fetchProducts = async (filters) => {
+  setLoading(true)
+  try {
+    const url = new URL('/api/products', window.location.origin)
+    
+    if (filters.category && filters.category !== 'All') {
+      url.searchParams.append('category', filters.category)
+    }
+    if (filters.search) {
+      url.searchParams.append('search', filters.search)
+    }
+    if (filters.sortBy) {
+      url.searchParams.append('sortBy', filters.sortBy)
+    }
+    
+    const response = await fetch(url.toString())
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    const data = await response.json()
+    setProducts(data || [])
+  } catch (error) {
+    console.error('Error fetching products:', error)
+    toast.error('Failed to load products')
+  } finally {
+    setLoading(false)
+  }
+}
 
   
 
   // Fetch categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('is_active', true)
-          .order('name')
-        
-        if (error) throw error
-        setCategories(data || [])
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
+  fetchCategories()  // ✅ Naya function call
+}, []) 
 
   // Fetch products
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true)
-      try {
-        let queryBuilder = supabase
-          .from('products')
-          .select(`
-            *,
-            categories!inner (
-              id,
-              name,
-              slug
-            )
-          `)
-          .eq('is_active', true)
-
-        // Apply category filter
-        if (activeCategory !== 'All') {
-          const category = categories.find(c => c.name === activeCategory)
-          if (category) {
-            queryBuilder = queryBuilder.eq('category_id', category.id)
-          }
-        }
-
-        // Apply search filter
-        if (query && query.trim()) {
-          const searchTerm = query.trim()
-          queryBuilder = queryBuilder.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-        }
-
-        // Apply sorting
-        if (sortBy === 'az') {
-          queryBuilder = queryBuilder.order('name', { ascending: true })
-        } else if (sortBy === 'za') {
-          queryBuilder = queryBuilder.order('name', { ascending: false })
-        } else {
-          queryBuilder = queryBuilder
-            .order('is_featured', { ascending: false })
-            .order('created_at', { ascending: false })
-        }
-
-        const { data, error } = await queryBuilder
-
-        if (error) throw error
-        setProducts(data || [])
-      } catch (error) {
-        console.error('Error fetching products:', error)
-        toast.error('Failed to load products')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-
-
-    fetchProducts()
-  }, [activeCategory, query, sortBy, categories])
+  fetchProducts({
+    category: activeCategory,
+    search: query,
+    sortBy: sortBy
+  })
+}, [activeCategory, query, sortBy]) 
 
   // Handle category count
-  const getCategoryCount = useCallback((categoryName) => {
-    if (categoryName === 'All') return products.length
-    return products.filter(p => p.categories?.name === categoryName).length
-  }, [products])
+ const getCategoryCount = useCallback((categoryName) => {
+  if (categoryName === 'All') return products.length
+  return products.filter(p => p.categories?.name === categoryName).length
+}, [products])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

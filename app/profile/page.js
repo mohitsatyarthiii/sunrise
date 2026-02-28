@@ -1,8 +1,9 @@
 'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+// ❌ Ye line hatao: import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ import {
 export default function ProfilePage() {
   const { user, profile, loading: authLoading } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
+  // ❌ Ye line hatao: const supabase = createClient()
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -48,20 +49,69 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router])
 
+  // ✅ Naya fetch profile function
+  const fetchProfile = async (userId) => {
+    try {
+      const response = await fetch(`/api/profile?userId=${userId}`)
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      const data = await response.json()
+      
+      setFormData({
+        full_name: data.full_name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        city: data.city || '',
+        country: data.country || 'UAE',
+        company_name: data.company_name || ''
+      })
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      toast.error('Failed to load profile')
+    }
+  }
+
+  // ✅ Naya update profile function
+  const updateProfile = async (userId, data) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          ...data
+        })
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const updatedProfile = await response.json()
+      toast.success('Profile updated successfully!')
+      setEditMode(false)
+      
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast.error('Failed to update profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Load profile data
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        address: profile.address || '',
-        city: profile.city || '',
-        country: profile.country || 'UAE',
-        company_name: profile.company_name || ''
-      })
+    if (user?.id) {
+      fetchProfile(user.id)  // ✅ Updated
     }
-  }, [profile])
+  }, [user])
 
   const handleChange = (e) => {
     setFormData({
@@ -72,32 +122,17 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          country: formData.country,
-          company_name: formData.company_name,
-          updated_at: new Date()
-        })
-        .eq('id', user.id)
-
-      if (error) throw error
-
-      toast.success('Profile updated successfully!')
-      setEditMode(false)
-    } catch (error) {
-      console.error('Error updating profile:', error)
-      toast.error('Failed to update profile')
-    } finally {
-      setLoading(false)
-    }
+    
+    if (!user?.id) return
+    
+    await updateProfile(user.id, {
+      full_name: formData.full_name,
+      phone: formData.phone,
+      address: formData.address,
+      city: formData.city,
+      country: formData.country,
+      company_name: formData.company_name
+    })
   }
 
   if (authLoading) {

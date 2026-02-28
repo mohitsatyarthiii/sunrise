@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+// ❌ Ye line hatao: import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,7 +25,52 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  // ❌ Ye line hatao: const supabase = createClient()
+
+  // ✅ Naya check email function
+  const checkEmailExists = async (email) => {
+    try {
+      const response = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const data = await response.json()
+      return data.exists
+    } catch (error) {
+      console.error('Error checking email:', error)
+      return false
+    }
+  }
+
+  // ✅ Naya signup function
+  const signUp = async (userData) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error)
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Signup error:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const validateForm = () => {
     const newErrors = {}
@@ -59,7 +104,6 @@ export default function SignupPage() {
       ...formData,
       [e.target.id]: e.target.value
     })
-    // Clear error for this field
     if (errors[e.target.id]) {
       setErrors({
         ...errors,
@@ -79,44 +123,29 @@ export default function SignupPage() {
     setErrors({})
 
     try {
-      // First check if user exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', formData.email)
-        .single()
-
-      if (existingUser) {
+      // Check if email exists via API
+      const exists = await checkEmailExists(formData.email)
+      
+      if (exists) {
         throw new Error('User with this email already exists')
       }
 
-      // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      // Sign up via API
+      const result = await signUp({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formData.phone,
-            company_name: formData.companyName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        fullName: formData.fullName,
+        phone: formData.phone,
+        companyName: formData.companyName
       })
 
-      if (error) {
-        console.error('Signup error:', error)
-        throw error
-      }
-
-      if (data?.user) {
+      if (result.success) {
         setSuccess(true)
         toast.success('Account created successfully!', {
           description: 'Please check your email for verification link.',
           duration: 5000,
         })
         
-        // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/login?verified=false')
         }, 3000)
@@ -127,10 +156,8 @@ export default function SignupPage() {
       
       let errorMessage = 'Failed to create account'
       
-      if (error.message?.includes('User already registered')) {
+      if (error.message?.includes('already exists')) {
         errorMessage = 'Email already registered. Please login instead.'
-      } else if (error.message?.includes('Database error')) {
-        errorMessage = 'Database error. Our team has been notified.'
       } else if (error.message) {
         errorMessage = error.message
       }

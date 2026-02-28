@@ -62,27 +62,27 @@ export default function ContactPage() {
 
   const offices = [
     {
-      city: "Dubai (Headquarters)",
-      address: "Office 1004, Business Bay, Sheikh Zayed Road, PO Box 12345, Dubai, UAE",
-      phone: "+971 4 123 4567",
-      email: "dubai@sunriseimpex.com",
+      city: "Ras Al Khaimah (UAE Headquarters)",
+      address: "SBAM0345, Compass Building, AL Sahara Road, Al Hamra Industrial Zone, FZ, RAK, UAE",
+      phone: "+971 58 238 1125",
+      email: "uae@jaishnaviexports.com",
       timing: "Sun - Thu: 9:00 AM - 6:00 PM",
       icon: <Building2 className="h-6 w-6" />
     },
     {
-      city: "Mumbai Office",
-      address: "Trade Center, 15th Floor, Bandra Kurla Complex, Mumbai - 400051, India",
-      phone: "+91 22 1234 5678",
-      email: "mumbai@sunriseimpex.com",
+      city: "Ahmedabad Office",
+      address: "320/321/322 Vishala Empire, SP Ring Road Touch, Near Dehgam Ring Road Circle, Ranasan Toll Plaza, Naroda, Ahmedabad, Gujarat 382330 India",
+      phone: "+91 70487 37392",
+      email: "india@jaishnaviexports.com",
       timing: "Mon - Fri: 9:30 AM - 6:30 PM",
       icon: <Building2 className="h-6 w-6" />
     },
     {
-      city: "London Office",
-      address: "Level 17, Dashwood House, 69 Old Broad Street, London EC2M 1QS, UK",
-      phone: "+44 20 1234 5678",
-      email: "london@sunriseimpex.com",
-      timing: "Mon - Fri: 9:00 AM - 5:30 PM",
+      city: "USA Office",
+      address: "8301 State Line RD. STE 220 #2632 Kansas City, Missouri 64114 Jackson, Missouri, USA",
+      phone: "+1 (816) 123-4567",
+      email: "usa@jaishnaviexports.com",
+      timing: "Mon - Fri: 9:00 AM - 5:30 PM (CST)",
       icon: <Building2 className="h-6 w-6" />
     }
   ]
@@ -91,23 +91,23 @@ export default function ContactPage() {
     {
       icon: <Phone className="h-6 w-6" />,
       title: "Call Us",
-      details: ["+971 4 123 4567", "+971 50 123 4567"],
-      action: "tel:+97141234567",
+      details: ["UAE: +971 58 238 1125", "India: +91 70487 37392"],
+      action: "tel:+971582381125",
       bgColor: "bg-green-100",
       textColor: "text-green-600"
     },
     {
       icon: <Mail className="h-6 w-6" />,
       title: "Email Us",
-      details: ["info@sunriseimpex.com", "sales@sunriseimpex.com"],
-      action: "mailto:info@sunriseimpex.com",
+      details: ["info@jaishnaviexports.com", "sales@jaishnaviexports.com"],
+      action: "mailto:info@jaishnaviexports.com",
       bgColor: "bg-blue-100",
       textColor: "text-blue-600"
     },
     {
       icon: <HeadphonesIcon className="h-6 w-6" />,
       title: "24/7 Support",
-      details: ["Live Chat Available", "WhatsApp: +971 50 123 4567"],
+      details: ["WhatsApp: +971 58 238 1125", "Live Chat Available"],
       action: "#",
       bgColor: "bg-purple-100",
       textColor: "text-purple-600"
@@ -117,7 +117,7 @@ export default function ContactPage() {
   const faqs = [
     {
       question: "How quickly can I get a response?",
-      answer: "We typically respond within 2-4 hours during business hours. For urgent inquiries, please use our live chat or WhatsApp."
+      answer: "We typically respond within 2-4 hours during business hours. For urgent inquiries, please use WhatsApp at +971 58 238 1125."
     },
     {
       question: "Do you offer sample orders?",
@@ -275,7 +275,7 @@ export default function ContactPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="+971 50 123 4567"
+                        placeholder="+971 58 238 1125"
                         className="w-full"
                       />
                     </div>
@@ -412,7 +412,7 @@ export default function ContactPage() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b">
-                      <span className="text-gray-600">Sunday - Thursday</span>
+                      <span className="text-gray-600">Sunday - Thursday (UAE)</span>
                       <span className="font-semibold">9:00 AM - 6:00 PM</span>
                     </div>
                     <div className="flex justify-between items-center pb-2 border-b">
@@ -421,7 +421,7 @@ export default function ContactPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Emergency Support</span>
-                      <span className="font-semibold text-blue-600">+971 50 123 4567</span>
+                      <span className="font-semibold text-blue-600">+971 58 238 1125</span>
                     </div>
                   </div>
                 </CardContent>
@@ -525,8 +525,8 @@ export default function ContactPage() {
                 <span className="block text-blue-600">Questions</span>
               </h2>
               <p className="text-gray-600 mb-8">
-                    Can't find what you're looking for? Contact our support team directly.
-                  </p>
+                Can't find what you're looking for? Contact our support team directly.
+              </p>
               <Button asChild variant="outline" size="lg">
                 <Link href="/help">
                   View All FAQs
@@ -563,7 +563,7 @@ export default function ContactPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white bg-black text-white hover:bg-white/10">
+            <Button asChild size="lg" variant="outline" className="border-white text-black hover:bg-white/10">
               <Link href="/about">
                 Learn About Us
               </Link>
@@ -578,20 +578,20 @@ export default function ContactPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <Globe className="h-6 w-6 text-blue-400" />
-              <span className="font-bold text-xl">Sunrise Impex</span>
+              <span className="font-bold text-xl">Jaishnavi Exports</span>
             </div>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span>+971 4 123 4567</span>
+                <span>UAE: +971 58 238 1125</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span>info@sunriseimpex.com</span>
+                <span>info@jaishnaviexports.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400" />
-                <span>Dubai, UAE</span>
+                <span>UAE · India · USA</span>
               </div>
             </div>
           </div>

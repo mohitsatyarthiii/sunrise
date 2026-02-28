@@ -60,72 +60,106 @@ export default function AdminEnquiriesPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedEnquiry, setSelectedEnquiry] = useState(null)
   const [replyDialog, setReplyDialog] = useState({ open: false, reply: '' })
-  const supabase = createClient()
+  
 
   useEffect(() => {
-    fetchEnquiries()
-  }, [])
+  fetchEnquiries()  // ✅ Naya function call
+}, [])
 
-  const fetchEnquiries = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('enquiries')
-        .select(`
-          *,
-          products:product_id (
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setEnquiries(data || [])
-    } catch (error) {
-      console.error('Error fetching enquiries:', error)
-      toast.error('Failed to load enquiries')
-    } finally {
-      setLoading(false)
+  // ✅ Naya fetch enquiries function
+const fetchEnquiries = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/enquiries')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setEnquiries(data || [])
+  } catch (error) {
+    console.error('Error fetching enquiries:', error)
+    toast.error('Failed to load enquiries')
+  } finally {
+    setLoading(false)
+  }
+}
+
+// ✅ Naya update status function
+const updateStatus = async (id, status) => {
+  try {
+    const response = await fetch(`/api/admin/enquiries/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    toast.success(`Enquiry marked as ${status}`)
+    fetchEnquiries() // Refresh list
+  } catch (error) {
+    console.error('Error updating enquiry:', error)
+    toast.error('Failed to update status')
+  }
+}
+
+// ✅ Naya send reply function
+const sendReply = async (enquiryId, reply) => {
+  try {
+    const response = await fetch('/api/admin/enquiries/reply', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        enquiryId,
+        reply,
+        emailData: {
+          adminId: 'admin' // You can get this from auth context
+        }
+      })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error sending reply:', error)
+    throw error
+  }
+}
+
+const handleReply = async () => {
+  if (!replyDialog.reply.trim()) {
+    toast.error('Please enter a reply')
+    return
   }
 
-  const updateStatus = async (id, status) => {
-    try {
-      const { error } = await supabase
-        .from('enquiries')
-        .update({ status, updated_at: new Date() })
-        .eq('id', id)
-
-      if (error) throw error
-
-      toast.success(`Enquiry marked as ${status}`)
-      fetchEnquiries()
-    } catch (error) {
-      console.error('Error updating enquiry:', error)
-      toast.error('Failed to update status')
-    }
+  try {
+    // ✅ Send reply via API
+    await sendReply(selectedEnquiry.id, replyDialog.reply)
+    
+    toast.success('Reply sent successfully')
+    setReplyDialog({ open: false, reply: '' })
+    setSelectedEnquiry(null)
+    fetchEnquiries() // Refresh list
+  } catch (error) {
+    console.error('Error sending reply:', error)
+    toast.error('Failed to send reply')
   }
-
-  const handleReply = async () => {
-    if (!replyDialog.reply.trim()) {
-      toast.error('Please enter a reply')
-      return
-    }
-
-    try {
-      // Here you would typically send an email
-      // For now, just update status
-      await updateStatus(selectedEnquiry.id, 'replied')
-      
-      toast.success('Reply sent successfully')
-      setReplyDialog({ open: false, reply: '' })
-      setSelectedEnquiry(null)
-    } catch (error) {
-      console.error('Error sending reply:', error)
-      toast.error('Failed to send reply')
-    }
-  }
+}
 
   const filteredEnquiries = enquiries.filter(enquiry => {
     const matchesSearch = 

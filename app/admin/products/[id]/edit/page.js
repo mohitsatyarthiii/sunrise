@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -44,7 +43,7 @@ export default function EditProductPage() {
   const router = useRouter()
   const params = useParams()
   const productId = params.id
-  const supabase = createClient()
+ 
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -72,70 +71,168 @@ export default function EditProductPage() {
     meta_description: ''
   })
 
+
+  // ✅ Naya fetch product function
+const fetchProduct = async (id) => {
+  setLoading(true)
+  try {
+    const response = await fetch(`/api/admin/products/${id}`)
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Product not found')
+      }
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const data = await response.json()
+    
+    setFormData({
+      name: data.name || '',
+      slug: data.slug || '',
+      description: data.description || '',
+      short_description: data.short_description || '',
+      category_id: data.category_id || '',
+      origin: data.origin || '',
+      images: data.images?.length 
+        ? [...data.images, ...Array(Math.max(0, 4 - data.images.length)).fill('')]
+        : ['', '', '', ''],
+      sample_options: data.sample_options?.length 
+        ? data.sample_options 
+        : [{ quantity: 1, unit: 'kg', price: 0 }],
+      specifications: data.specifications || {},
+      is_featured: data.is_featured || false,
+      is_active: data.is_active !== false,
+      meta_title: data.meta_title || '',
+      meta_description: data.meta_description || ''
+    })
+  } catch (error) {
+    console.error('Error fetching product:', error)
+    toast.error(error.message || 'Failed to load product')
+    router.push('/admin/products')
+  } finally {
+    setLoading(false)
+  }
+}
+
+// ✅ Naya fetch categories function
+const fetchCategories = async () => {
+  try {
+    const response = await fetch('/api/admin/products') // Reuse same endpoint
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const data = await response.json()
+    setCategories(data || [])
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    toast.error('Failed to load categories')
+  }
+}
+
+// ✅ Naya update product function
+const updateProduct = async (id, data) => {
+  setSaving(true)
+  try {
+    const response = await fetch(`/api/admin/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    toast.success('Product updated successfully')
+    router.push('/admin/products')
+    router.refresh()
+  } catch (error) {
+    console.error('Error updating product:', error)
+    toast.error(error.message || 'Failed to update product')
+  } finally {
+    setSaving(false)
+  }
+}
+
+// ✅ Naya delete product function
+const deleteProduct = async (id) => {
+  setDeleting(true)
+  try {
+    const response = await fetch(`/api/admin/products/${id}`, {
+      method: 'DELETE'
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    toast.success('Product deleted successfully')
+    router.push('/admin/products')
+    router.refresh()
+  } catch (error) {
+    console.error('Error deleting product:', error)
+    toast.error(error.message || 'Failed to delete product')
+  } finally {
+    setDeleting(false)
+    setShowDeleteDialog(false)
+  }
+}
+
+// ✅ Naya duplicate product function
+const duplicateProduct = async (id) => {
+  try {
+    const response = await fetch(`/api/admin/products/${id}/duplicate`, {
+      method: 'POST'
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const newProduct = await response.json()
+    toast.success('Product duplicated successfully')
+    router.push(`/admin/products/${newProduct.id}/edit`)
+  } catch (error) {
+    console.error('Error duplicating product:', error)
+    toast.error(error.message || 'Failed to duplicate product')
+  }
+}
+
+// ✅ Naya image upload function
+const uploadImage = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  const response = await fetch('/api/admin/products/upload', {
+    method: 'POST',
+    body: formData
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  const data = await response.json()
+  return data.url
+}
   // Fetch product data
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select(`
-            *,
-            categories (
-              id,
-              name,
-              slug
-            )
-          `)
-          .eq('id', productId)
-          .single()
-
-        if (error) throw error
-
-        if (data) {
-          setFormData({
-            name: data.name || '',
-            slug: data.slug || '',
-            description: data.description || '',
-            short_description: data.short_description || '',
-            category_id: data.category_id || '',
-            origin: data.origin || '',
-            images: data.images?.length 
-              ? [...data.images, ...Array(Math.max(0, 4 - data.images.length)).fill('')]
-              : ['', '', '', ''],
-            sample_options: data.sample_options?.length 
-              ? data.sample_options 
-              : [{ quantity: 1, unit: 'kg', price: 0 }],
-            specifications: data.specifications || {},
-            is_featured: data.is_featured || false,
-            is_active: data.is_active !== false,
-            meta_title: data.meta_title || '',
-            meta_description: data.meta_description || ''
-          })
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error)
-        toast.error('Failed to load product')
-        router.push('/admin/products')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const fetchCategories = async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
-      setCategories(data || [])
-    }
-
-    if (productId) {
-      fetchProduct()
-      fetchCategories()
-    }
-  }, [productId])
+  if (productId) {
+    fetchProduct(productId)
+    fetchCategories()
+  }
+}, [productId])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -175,47 +272,36 @@ export default function EditProductPage() {
   }
 
   const handleImageUpload = async (index, e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const file = e.target.files?.[0]
+  if (!file) return
 
-    setUploadingImage(index)
-    try {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Please upload an image file')
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Image size should be less than 5MB')
-      }
-
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `products/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath)
-
-      const newImages = [...formData.images]
-      newImages[index] = publicUrl
-      setFormData(prev => ({ ...prev, images: newImages }))
-      
-      toast.success('Image uploaded successfully')
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      toast.error(error.message || 'Failed to upload image')
-    } finally {
-      setUploadingImage(null)
+  setUploadingImage(index)
+  try {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Please upload an image file')
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Image size should be less than 5MB')
+    }
+
+    // ✅ Upload via API
+    const imageUrl = await uploadImage(file)
+
+    const newImages = [...formData.images]
+    newImages[index] = imageUrl
+    setFormData(prev => ({ ...prev, images: newImages }))
+    
+    toast.success('Image uploaded successfully')
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    toast.error(error.message || 'Failed to upload image')
+  } finally {
+    setUploadingImage(null)
   }
+}
 
   const removeImage = (index) => {
     const newImages = [...formData.images]
@@ -225,110 +311,17 @@ export default function EditProductPage() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-
-    try {
-      // Validate required fields
-      if (!formData.name.trim()) {
-        throw new Error('Product name is required')
-      }
-      if (!formData.slug.trim()) {
-        throw new Error('Product slug is required')
-      }
-
-      // Filter out empty images
-      const filteredImages = formData.images.filter(img => img && img.trim())
-      
-      // Filter out empty sample options
-      const filteredSamples = formData.sample_options.filter(opt => opt.price > 0)
-
-      if (filteredSamples.length === 0) {
-        throw new Error('At least one sample option with price > 0 is required')
-      }
-
-      const productData = {
-        name: formData.name.trim(),
-        slug: formData.slug.trim(),
-        description: formData.description?.trim() || null,
-        short_description: formData.short_description?.trim() || null,
-        category_id: formData.category_id || null,
-        origin: formData.origin?.trim() || null,
-        images: filteredImages,
-        sample_options: filteredSamples,
-        specifications: formData.specifications || {},
-        is_featured: formData.is_featured,
-        is_active: formData.is_active,
-        meta_title: formData.meta_title?.trim() || null,
-        meta_description: formData.meta_description?.trim() || null,
-        updated_at: new Date()
-      }
-
-      const { error } = await supabase
-        .from('products')
-        .update(productData)
-        .eq('id', productId)
-
-      if (error) throw error
-
-      toast.success('Product updated successfully')
-      router.push('/admin/products')
-      router.refresh()
-    } catch (error) {
-      console.error('Error updating product:', error)
-      toast.error(error.message || 'Failed to update product')
-    } finally {
-      setSaving(false)
-    }
-  }
+  e.preventDefault()
+  await updateProduct(productId, formData)
+}
 
   const handleDelete = async () => {
-    setDeleting(true)
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId)
-
-      if (error) throw error
-
-      toast.success('Product deleted successfully')
-      router.push('/admin/products')
-      router.refresh()
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      toast.error('Failed to delete product')
-    } finally {
-      setDeleting(false)
-      setShowDeleteDialog(false)
-    }
-  }
+  await deleteProduct(productId)
+}
 
   const handleDuplicate = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert([{
-          ...formData,
-          name: `${formData.name} (Copy)`,
-          slug: `${formData.slug}-copy-${Date.now()}`,
-          images: formData.images.filter(img => img),
-          sample_options: formData.sample_options,
-          created_at: new Date(),
-          updated_at: new Date()
-        }])
-        .select()
-
-      if (error) throw error
-
-      toast.success('Product duplicated successfully')
-      router.push(`/admin/products/${data[0].id}/edit`)
-    } catch (error) {
-      console.error('Error duplicating product:', error)
-      toast.error('Failed to duplicate product')
-    }
-  }
-
+  await duplicateProduct(productId)
+}
   const handleViewProduct = () => {
     window.open(`/products/${formData.slug}`, '_blank')
   }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+// ❌ Ye line hatao: import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,12 +21,74 @@ export default function LoginClient() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = createClient()
+  // ❌ Ye line hatao: const supabase = createClient()
 
   const verified = searchParams.get('verified')
   const redirectTo = searchParams.get('redirect') || '/'
 
-  // ✅ IMPORTANT: toast render me nahi, effect me
+  // ✅ Naya login function
+  const loginUser = async (email, password) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Login failed')
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ✅ Naya demo login function
+  const demoLogin = async (role) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role })
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Demo login failed')
+      }
+      
+      const data = await response.json()
+      
+      toast.success(`Welcome back${data.user.full_name ? ', ' + data.user.full_name : ''}!`)
+      
+      if (data.user.is_admin) {
+        router.push('/admin/dashboard')
+      } else {
+        router.push(redirectTo)
+      }
+      
+      router.refresh()
+    } catch (error) {
+      console.error('Demo login error:', error)
+      toast.error('Login Failed', { description: error.message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (verified === 'true') {
       toast.success('Email verified! Please login.')
@@ -59,46 +121,30 @@ export default function LoginClient() {
 
     if (!validateForm()) return
 
-    setLoading(true)
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
-        password: password,
-      })
-
-      if (error) throw new Error(error.message)
-
-      if (data?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin, full_name')
-          .eq('id', data.user.id)
-          .single()
-
-        toast.success(`Welcome back${profile?.full_name ? ', ' + profile.full_name : ''}!`)
-
-        if (profile?.is_admin) router.push('/admin/dashboard')
-        else router.push(redirectTo)
-
-        router.refresh()
+      const result = await loginUser(email, password)
+      
+      toast.success(`Welcome back${result.user.full_name ? ', ' + result.user.full_name : ''}!`)
+      
+      if (result.user.is_admin) {
+        router.push('/admin/dashboard')
+      } else {
+        router.push(redirectTo)
       }
+      
+      router.refresh()
     } catch (error) {
       setError(error.message)
       toast.error('Login Failed', { description: error.message })
-    } finally {
-      setLoading(false)
     }
   }
 
   const handleDemoLogin = async (role) => {
     setEmail(role === 'admin' ? 'admin@exportecom.com' : 'user@exportecom.com')
     setPassword('demo123456')
-
+    
     setTimeout(() => {
-      document.getElementById('login-form')?.dispatchEvent(
-        new Event('submit', { cancelable: true, bubbles: true })
-      )
+      demoLogin(role)
     }, 100)
   }
 
@@ -134,7 +180,6 @@ export default function LoginClient() {
 
         <form id="login-form" onSubmit={handleLogin}>
           <CardContent className="space-y-4">
-            {/* EMAIL */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -143,7 +188,6 @@ export default function LoginClient() {
               </div>
             </div>
 
-            {/* PASSWORD */}
             <div className="space-y-2">
               <Label>Password</Label>
               <div className="relative">

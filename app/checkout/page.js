@@ -8,7 +8,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { getStripe } from '@/lib/stripe/client'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client' // Make sure this is the client-side client
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -139,7 +139,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
   const { cartItems, cartTotal, clearCart } = useCart()
-  const supabase = createClient()
+ // This is client-side client
   
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -158,6 +158,60 @@ export default function CheckoutPage() {
     notes: ''
   })
 
+
+  // ✅ Naya create order function
+const createOrder = async (orderData) => {
+  const response = await fetch('/api/checkout/create-order', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orderData)
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
+
+// ✅ Naya create payment function
+const createPayment = async (paymentData) => {
+  const response = await fetch('/api/checkout/create-payment', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(paymentData)
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
+
+// ✅ Naya update profile function
+const updateProfile = async (userId, profileData) => {
+  const response = await fetch('/api/checkout/update-profile', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId, profileData })
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error)
+  }
+  
+  return response.json()
+}
   // Redirect if not logged in
   useEffect(() => {
     if (!user) {
@@ -227,95 +281,77 @@ export default function CheckoutPage() {
     return true
   }
 
-  const handlePlaceOrder = async () => {
-    if (!validateStep1() || !validateStep2()) return
+ const handlePlaceOrder = async () => {
+  if (!validateStep1() || !validateStep2()) return
 
-    setLoading(true)
+  setLoading(true)
 
-    try {
-      // Generate order number
-      const orderNum = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase()
-      setOrderNumber(orderNum)
+  try {
+    // Generate order number
+    const orderNum = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase()
+    setOrderNumber(orderNum)
 
-      // Prepare order items
-      const items = cartItems.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        productSlug: item.productSlug,
-        productImage: item.productImage,
-        sampleQuantity: item.sampleQuantity,
-        unit: item.unit,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.price * item.quantity
-      }))
+    // Prepare order items
+    const items = cartItems.map(item => ({
+      productId: item.productId,
+      productName: item.productName,
+      productSlug: item.productSlug,
+      productImage: item.productImage,
+      sampleQuantity: item.sampleQuantity,
+      unit: item.unit,
+      price: item.price,
+      quantity: item.quantity,
+      total: item.price * item.quantity
+    }))
 
-      // Create order in database
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          order_number: orderNum,
-          user_id: user.id,
-          status: 'pending',
-          total_amount: cartTotal,
-          shipping_address: formData.address,
-          shipping_city: formData.city,
-          shipping_country: formData.country,
-          shipping_phone: formData.phone,
-          items: items,
-          payment_status: 'pending',
-          notes: formData.notes
-        }])
+    // ✅ Step 1: Create order via API
+    await createOrder({
+      userId: user.id,
+      orderNumber: orderNum,
+      items,
+      total: cartTotal,
+      shipping: {
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+        phone: formData.phone
+      },
+      notes: formData.notes
+    })
 
-      if (orderError) throw orderError
-
-      // Create payment intent
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items,
-          orderId: orderNum,
-          shippingDetails: formData
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment')
+    // ✅ Step 2: Create payment intent via API
+    const paymentData = await createPayment({
+      items,
+      orderId: orderNum,
+      shippingDetails: {
+        ...formData,
+        userId: user.id
       }
+    })
 
-      setClientSecret(data.clientSecret)
-      setPaymentIntentId(data.paymentIntentId)
+    setClientSecret(paymentData.clientSecret)
+    setPaymentIntentId(paymentData.paymentIntentId)
 
-      // Update profile with latest info
-      await supabase
-        .from('profiles')
-        .update({
-          full_name: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          country: formData.country,
-          company_name: formData.company
-        })
-        .eq('id', user.id)
-
-      // Move to payment step
-      setStep(3)
-      
-    } catch (error) {
-      console.error('Error placing order:', error)
-      toast.error('Failed to place order', {
-        description: error.message
-      })
-    } finally {
-      setLoading(false)
+    // ✅ Step 3: Update profile via API (optional, don't wait)
+    try {
+      await updateProfile(user.id, formData)
+    } catch (profileError) {
+      console.error('Profile update error:', profileError)
+      // Don't block checkout if profile update fails
     }
+
+    // Move to payment step
+    setStep(3)
+    
+  } catch (error) {
+    console.error('Error placing order:', error)
+    toast.error('Failed to place order', {
+      description: error.message || 'Something went wrong'
+    })
+  } finally {
+    setLoading(false)
   }
+}
 
   const handlePaymentSuccess = () => {
     clearCart()
@@ -618,10 +654,6 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium text-gray-900">Free</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-medium text-gray-900">Included</span>
                   </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between text-lg font-bold">

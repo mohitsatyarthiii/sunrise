@@ -14,24 +14,53 @@ export default function PaymentSuccessPage() {
   const orderId = searchParams.get('order_id')
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (!orderId) return
-
-      const { data } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('order_number', orderId)
-        .single()
-
-      setOrder(data)
-      setLoading(false)
+  // ✅ Naya fetch order function
+const fetchOrderByNumber = async (orderNum) => {
+  setLoading(true)
+  try {
+    const response = await fetch(`/api/orders/${orderNum}`)
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        setOrder(null)
+        return
+      }
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setOrder(data)
+  } catch (error) {
+    console.error('Error fetching order:', error)
+  } finally {
+    setLoading(false)
+  }
+}
+  
 
-    fetchOrder()
-  }, [orderId])
+ useEffect(() => {
+  if (orderId) {
+    fetchOrderByNumber(orderId)  // ✅ Naya function call
+  } else {
+    setLoading(false)
+  }
+}, [orderId])  // ✅ Ab safe hai
+
+if (loading) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Card className="border-0 shadow-sm bg-white p-8 text-center">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+          </div>
+          <p className="mt-4 text-gray-600">Loading order details...</p>
+        </Card>
+      </div>
+    </div>
+  )
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server' // This is server-side
 
 export async function POST(request) {
   try {
@@ -28,12 +28,12 @@ export async function POST(request) {
       receipt_email: shippingDetails.email,
     })
 
-    // Store payment intent in Supabase for tracking
-    const supabase = createClient()
-    await supabase
+    // Store payment intent in Supabase for tracking (server-side)
+    const supabase = createServerSupabaseClient()
+    const { error } = await supabase
       .from('payments')
       .insert([{
-        order_id: orderId,
+        order_number: orderId,
         payment_intent_id: paymentIntent.id,
         amount: amount,
         currency: 'aed',
@@ -43,6 +43,11 @@ export async function POST(request) {
           shipping: shippingDetails
         }
       }])
+
+    if (error) {
+      console.error('Error storing payment:', error)
+      // Don't throw - we still want to return the client secret
+    }
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,

@@ -54,54 +54,86 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteDialog, setDeleteDialog] = useState({ open: false, productId: null })
-  const supabase = createClient()
+  
 
   useEffect(() => {
     fetchProducts()
   }, [])
 
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories (
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setProducts(data || [])
-    } catch (error) {
-      console.error('Error fetching products:', error)
-      toast.error('Failed to load products')
-    } finally {
-      setLoading(false)
+// ✅ Naya fetch products function
+const fetchProducts = async () => {
+  setLoading(true)
+  try {
+    const response = await fetch('/api/admin/products')
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    const data = await response.json()
+    setProducts(data || [])
+  } catch (error) {
+    console.error('Error fetching products:', error)
+    toast.error('Failed to load products')
+  } finally {
+    setLoading(false)
   }
+}
 
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', deleteDialog.productId)
-
-      if (error) throw error
-
-      toast.success('Product deleted successfully')
-      fetchProducts()
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      toast.error('Failed to delete product')
-    } finally {
-      setDeleteDialog({ open: false, productId: null })
+// ✅ Naya delete product function
+const deleteProduct = async (productId) => {
+  try {
+    const response = await fetch(`/api/admin/products/${productId}`, {
+      method: 'DELETE'
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
     }
+    
+    toast.success('Product deleted successfully')
+    fetchProducts() // Refresh list
+  } catch (error) {
+    console.error('Error deleting product:', error)
+    toast.error(error.message || 'Failed to delete product')
+  } finally {
+    setDeleteDialog({ open: false, productId: null })
   }
+}
+
+// ✅ Naya duplicate product function
+const duplicateProduct = async (productId) => {
+  try {
+    const response = await fetch('/api/admin/products/duplicate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    
+    const newProduct = await response.json()
+    toast.success('Product duplicated successfully')
+    fetchProducts() // Refresh list
+    
+    // Optional: Redirect to edit page
+    // router.push(`/admin/products/${newProduct.id}/edit`)
+  } catch (error) {
+    console.error('Error duplicating product:', error)
+    toast.error('Failed to duplicate product')
+  }
+}
+
+const handleDelete = async () => {
+  await deleteProduct(deleteDialog.productId)  // ✅ Naya function call
+}
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -237,7 +269,7 @@ export default function AdminProductsPage() {
                                 Edit
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => duplicateProduct(product.id)}>
                               <Copy className="h-4 w-4 mr-2" />
                               Duplicate
                             </DropdownMenuItem>

@@ -140,11 +140,33 @@ const OrderCard = ({ order }) => {
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
+ 
   
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
+
+  // ✅ Ye naya function add karo
+const fetchOrders = async (userId, status) => {
+  try {
+    const url = new URL('/api/orders', window.location.origin)
+    url.searchParams.append('userId', userId)
+    if (status && status !== 'all') {
+      url.searchParams.append('status', status)
+    }
+    
+    const response = await fetch(url.toString())
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error)
+    }
+    const data = await response.json()
+    setOrders(data)
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    toast?.error?.(error.message || 'Failed to fetch orders')
+  }
+}
 
   // Redirect if not logged in
   useEffect(() => {
@@ -154,35 +176,18 @@ export default function OrdersPage() {
   }, [user, authLoading, router])
 
   // Fetch orders
-  useEffect(() => {
-    if (!user) return
+ // Fetch orders
+useEffect(() => {
+  if (!user) return
 
-    const fetchOrders = async () => {
-      setLoading(true)
-      try {
-        let query = supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+  const loadOrders = async () => {
+    setLoading(true)
+    await fetchOrders(user.id, activeTab)
+    setLoading(false)
+  }
 
-        if (activeTab !== 'all') {
-          query = query.eq('status', activeTab)
-        }
-
-        const { data, error } = await query
-
-        if (error) throw error
-        setOrders(data || [])
-      } catch (error) {
-        console.error('Error fetching orders:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOrders()
-  }, [user, activeTab])
+  loadOrders()
+}, [user, activeTab])  // ✅ Ab safe hai
 
   if (authLoading) {
     return (
