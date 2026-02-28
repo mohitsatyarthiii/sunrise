@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { getStripe } from '@/lib/stripe/client'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -26,9 +28,113 @@ import {
   Building,
   User,
   CheckCircle2,
-  Loader2
+  Loader2,
+  AlertCircle,
+  Lock
 } from 'lucide-react'
 
+// Checkout Form Component with Stripe
+function CheckoutForm({ orderData, onSuccess }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [processing, setProcessing] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!stripe || !elements) {
+      return
+    }
+
+    setProcessing(true)
+    setErrorMessage('')
+
+    try {
+      const { error: submitError } = await elements.submit()
+      if (submitError) {
+        throw new Error(submitError.message)
+      }
+
+      // Confirm payment
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/success?order_id=${orderData.orderNumber}`,
+          receipt_email: orderData.email,
+        },
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Payment succeeded
+      onSuccess()
+      
+    } catch (error) {
+      console.error('Payment error:', error)
+      setErrorMessage(error.message || 'Payment failed. Please try again.')
+      toast.error('Payment failed', {
+        description: error.message || 'Please try again'
+      })
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errorMessage && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-600">{errorMessage}</p>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <Lock className="h-4 w-4" />
+          <span>Payments are secure and encrypted</span>
+        </div>
+        
+        <PaymentElement />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full"
+        size="lg"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing Payment...
+          </>
+        ) : (
+          <>
+            <Lock className="mr-2 h-4 w-4" />
+            Pay AED {orderData.total.toFixed(2)}
+          </>
+        )}
+      </Button>
+
+      <p className="text-xs text-center text-gray-500">
+        By completing this payment, you agree to our{' '}
+        <Link href="/terms" className="text-blue-600 hover:underline">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="text-blue-600 hover:underline">
+          Privacy Policy
+        </Link>
+      </p>
+    </form>
+  )
+}
+
+// Main Checkout Page
 export default function CheckoutPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
@@ -37,7 +143,8 @@ export default function CheckoutPage() {
   
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [orderPlaced, setOrderPlaced] = useState(false)
+  const [clientSecret, setClientSecret] = useState('')
+  const [paymentIntentId, setPaymentIntentId] = useState('')
   const [orderNumber, setOrderNumber] = useState('')
   
   const [formData, setFormData] = useState({
@@ -76,10 +183,10 @@ export default function CheckoutPage() {
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (cartItems.length === 0 && !orderPlaced) {
+    if (cartItems.length === 0 && step !== 3) {
       router.push('/cart')
     }
-  }, [cartItems, router, orderPlaced])
+  }, [cartItems, router, step])
 
   const handleChange = (e) => {
     setFormData({
@@ -128,6 +235,7 @@ export default function CheckoutPage() {
     try {
       // Generate order number
       const orderNum = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase()
+      setOrderNumber(orderNum)
 
       // Prepare order items
       const items = cartItems.map(item => ({
@@ -142,8 +250,8 @@ export default function CheckoutPage() {
         total: item.price * item.quantity
       }))
 
-      // Insert order into database
-      const { error } = await supabase
+      // Create order in database
+      const { error: orderError } = await supabase
         .from('orders')
         .insert([{
           order_number: orderNum,
@@ -159,7 +267,29 @@ export default function CheckoutPage() {
           notes: formData.notes
         }])
 
-      if (error) throw error
+      if (orderError) throw orderError
+
+      // Create payment intent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items,
+          orderId: orderNum,
+          shippingDetails: formData
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create payment')
+      }
+
+      setClientSecret(data.clientSecret)
+      setPaymentIntentId(data.paymentIntentId)
 
       // Update profile with latest info
       await supabase
@@ -174,15 +304,9 @@ export default function CheckoutPage() {
         })
         .eq('id', user.id)
 
-      // Clear cart and show success
-      clearCart()
-      setOrderNumber(orderNum)
-      setOrderPlaced(true)
+      // Move to payment step
+      setStep(3)
       
-      toast.success('Order placed successfully!', {
-        description: `Your order number is ${orderNum}`
-      })
-
     } catch (error) {
       console.error('Error placing order:', error)
       toast.error('Failed to place order', {
@@ -193,43 +317,13 @@ export default function CheckoutPage() {
     }
   }
 
-  if (!user || cartItems.length === 0) {
-    return null
+  const handlePaymentSuccess = () => {
+    clearCart()
+    router.push(`/checkout/success?order_id=${orderNumber}`)
   }
 
-  if (orderPlaced) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="border-0 shadow-sm bg-white p-8 text-center">
-            <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            </div>
-            
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h1>
-            <p className="text-gray-600 mb-4">Thank you for your order</p>
-            
-            <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-sm px-4 py-2 mb-6">
-              Order Number: {orderNumber}
-            </Badge>
-            
-            <p className="text-sm text-gray-500 mb-8">
-              We've sent a confirmation email to {formData.email}. 
-              You can track your order status in your dashboard.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild>
-                <Link href="/orders">View My Orders</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/products">Continue Shopping</Link>
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    )
+  if (!user || cartItems.length === 0) {
+    return null
   }
 
   return (
@@ -294,7 +388,7 @@ export default function CheckoutPage() {
                     <h2 className="text-lg font-semibold text-gray-900">Contact Information</h2>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName">Full Name *</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -309,7 +403,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Email *</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -325,7 +419,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">Phone Number *</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -369,7 +463,7 @@ export default function CheckoutPage() {
                     <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
+                      <Label htmlFor="address">Address *</Label>
                       <div className="relative">
                         <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -385,7 +479,7 @@ export default function CheckoutPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
+                        <Label htmlFor="city">City *</Label>
                         <Input
                           id="city"
                           name="city"
@@ -395,7 +489,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
+                        <Label htmlFor="country">Country *</Label>
                         <Input
                           id="country"
                           name="country"
@@ -424,52 +518,54 @@ export default function CheckoutPage() {
                       </Button>
                       <Button 
                         className="flex-1" 
-                        onClick={() => validateStep2() && setStep(3)}
-                      >
-                        Continue to Payment
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Payment */}
-                {step === 3 && (
-                  <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Payment Method</h2>
-                    
-                    <Card className="border-2 border-blue-600 bg-blue-50">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">Pay on Delivery</p>
-                          <p className="text-sm text-gray-500">Pay when you receive your order</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <p className="text-sm text-gray-500 mt-4">
-                      By placing your order, you agree to our Terms of Service and Privacy Policy.
-                    </p>
-
-                    <div className="flex gap-3 mt-6">
-                      <Button variant="outline" onClick={() => setStep(2)}>
-                        Back
-                      </Button>
-                      <Button 
-                        className="flex-1" 
                         onClick={handlePlaceOrder}
                         disabled={loading}
                       >
                         {loading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Placing Order...
+                            Processing...
                           </>
                         ) : (
-                          'Place Order'
+                          'Proceed to Payment'
                         )}
                       </Button>
                     </div>
+                  </div>
+                )}
+
+                {/* Step 3: Payment with Stripe */}
+                {step === 3 && clientSecret && (
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Payment Details</h2>
+                    
+                    <Elements 
+                      stripe={getStripe()} 
+                      options={{
+                        clientSecret,
+                        appearance: {
+                          theme: 'stripe',
+                          variables: {
+                            colorPrimary: '#2563eb',
+                            colorBackground: '#ffffff',
+                            colorText: '#1f2937',
+                            colorDanger: '#ef4444',
+                            fontFamily: 'Inter, system-ui, sans-serif',
+                            spacingUnit: '4px',
+                            borderRadius: '8px',
+                          },
+                        },
+                      }}
+                    >
+                      <CheckoutForm 
+                        orderData={{
+                          orderNumber,
+                          total: cartTotal,
+                          email: formData.email
+                        }}
+                        onSuccess={handlePaymentSuccess}
+                      />
+                    </Elements>
                   </div>
                 )}
               </CardContent>
@@ -480,7 +576,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card className="border-0 shadow-sm bg-white sticky top-24">
               <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Your Order</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
                 
                 <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
                   {cartItems.map((item) => (
@@ -523,11 +619,26 @@ export default function CheckoutPage() {
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium text-gray-900">Free</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tax</span>
+                    <span className="font-medium text-gray-900">Included</span>
+                  </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-gray-900">Total</span>
                     <span className="text-blue-600">AED {cartTotal.toFixed(2)}</span>
                   </div>
+                </div>
+
+                {/* Trust Badge */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-blue-700">
+                    <Lock className="h-4 w-4" />
+                    <span className="font-medium">Secure Checkout</span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Your payment information is encrypted and secure
+                  </p>
                 </div>
               </CardContent>
             </Card>
