@@ -86,7 +86,7 @@ export default function Footer() {
                 <Globe className="h-5 w-5 text-white" />
               </div>
               <span className="font-semibold text-2xl text-white">
-                Jaishnavi <span className="text-blue-400">Exports</span>
+                Sunrise <span className="text-blue-400">Impex</span>
               </span>
             </div>
 
@@ -205,7 +205,7 @@ export default function Footer() {
       <div className="border-t border-white/10 bg-black/20">
         <div className="container mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400 gap-3">
 
-          <p>© {new Date().getFullYear()} Jaishnavi Exports. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Sunrise Impex. All rights reserved.</p>
 
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
