@@ -13,13 +13,13 @@ export const metadata = {
   description: 'Discover high-quality export products from UAE. Order samples, get quotes, and start your export journey with us.',
   keywords: 'export, uae, dubai, products, textiles, spices, handicrafts, leather goods',
   openGraph: {
-    title: 'ExportEcom - Premium Export Products from UAE',
+    title: 'Sunrise Impex - Premium Export Products from UAE',
     description: 'Discover high-quality export products from UAE. Order samples, get quotes, and start your export journey with us.',
-    url: 'https://exportecom.com',
-    siteName: 'ExportEcom',
+    url: 'https://sunriseimpexllc.com',
+    siteName: 'Sunrise Impex',
     images: [
       {
-        url: 'https://exportecom.com/og-image.jpg',
+        url: 'https://sunrise.com/og-image.jpg',
         width: 1200,
         height: 630,
       },
