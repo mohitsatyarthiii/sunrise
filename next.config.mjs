@@ -2,14 +2,10 @@
 const nextConfig = {
   images: {
     domains: ['yfogpdtrsswcbijnqltl.supabase.co', 'image2url.com'],
-    remotePatterns: [
+     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**", // ✅ allow all domains
-      },
-      {
-        protocol: "http",
-        hostname: "**",
+        protocol: 'https',
+        hostname: '**', // Allows all domains (use with caution)
       },
     ],
   },

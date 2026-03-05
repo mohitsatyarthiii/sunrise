@@ -46,6 +46,7 @@ import {
 } from 'lucide-react'
 import Hero from '@/components/home/Hero'
 import FeaturedProducts from '@/components/home/FeaturedProducts'
+import NewsSlider from '@/components/home/NewsSlider'
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([])
@@ -174,6 +175,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero Section */}
       <Hero />
+
+      <NewsSlider />
 
       {/* Trust Badges */}
       <section className="py-8 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">

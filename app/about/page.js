@@ -25,16 +25,19 @@ import {
   Leaf,
   Ship,
   HeadphonesIcon,
-  Sparkles
+  Sparkles,
+  Briefcase,
+  Network,
+  TrendingUp
 } from 'lucide-react'
 
 export default function AboutPage() {
   const [stats, setStats] = useState({
-    years: 12,
-    clients: 5000,
-    countries: 35,
-    shipments: 15000,
-    products: 5000,
+    years: 8,
+    clients: 2500,
+    countries: 25,
+    shipments: 8000,
+    products: 3000,
     satisfaction: 98
   })
 
@@ -42,32 +45,32 @@ export default function AboutPage() {
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Quality Assurance",
-      description: "We maintain stringent quality control measures to ensure all products meet international standards. From raw materials to finished goods, every item is carefully inspected."
+      description: "We maintain stringent quality control measures to ensure all products meet international standards. Every shipment is carefully inspected before dispatch."
     },
     {
       icon: <Leaf className="h-8 w-8" />,
-      title: "Sustainability & Ethics",
-      description: "We promote sustainable practices from sourcing eco-friendly materials to ensuring fair trade, operating with strong environmental and social responsibility."
+      title: "Sustainability",
+      description: "Committed to eco-friendly practices and ethical sourcing, we ensure our operations benefit both communities and the environment."
     },
     {
       icon: <Globe className="h-8 w-8" />,
       title: "Global Network",
-      description: "Our extensive logistics network allows us to serve clients across the globe, ensuring timely deliveries and efficient operations worldwide."
+      description: "Strategic location in UAE gives us access to world-class logistics, serving markets across Middle East, Africa, Europe, and Americas."
     },
     {
       icon: <Users className="h-8 w-8" />,
-      title: "Customer-Centric",
-      description: "We prioritize building long-term relationships by offering personalized solutions that cater to our clients' unique requirements."
-    },
-    {
-      icon: <Award className="h-8 w-8" />,
-      title: "Excellence",
-      description: "Our dedication to quality and customer satisfaction ensures we meet the highest standards in every market we serve."
+      title: "Client Focus",
+      description: "We build lasting partnerships through personalized solutions, understanding each client's unique requirements and market needs."
     },
     {
       icon: <Ship className="h-8 w-8" />,
-      title: "Global Reach",
-      description: "From UAE to Africa, USA, UK, Canada, and beyond - we deliver excellence worldwide through our entity Sunrise Impex & General Trading FZ-LLC."
+      title: "Logistics Excellence",
+      description: "End-to-end shipping solutions with reliable partners ensure timely delivery to any destination worldwide."
+    },
+    {
+      icon: <TrendingUp className="h-8 w-8" />,
+      title: "Market Expertise",
+      description: "Deep understanding of global trade dynamics helps clients navigate complex international markets successfully."
     }
   ]
 
@@ -85,15 +88,15 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto text-center">
             <Badge className="mb-6 bg-white/20 text-white border-white/30 px-4 py-2">
               <Sparkles className="h-4 w-4 mr-2" />
-              About Sunrise Impex
+              Welcome to Sunrise Impex
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              Your Trusted Partner in
-              <span className="block text-blue-300">Global Trade & Commerce</span>
+              Your Gateway to
+              <span className="block text-blue-300">Global Trade Excellence</span>
             </h1>
-            <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed">
-              With a broad portfolio of diverse products, we cater to industries ranging 
-              from construction and health to agriculture and toys, delivering excellence worldwide.
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+              Based in the heart of UAE's trading hub, we connect businesses worldwide 
+              with quality products, reliable logistics, and unmatched market expertise.
             </p>
           </div>
         </div>
@@ -140,44 +143,47 @@ export default function AboutPage() {
                 Who We Are
               </Badge>
               <h2 className="text-4xl font-bold mb-6">
-                A Trusted Name in{" "}
-                <span className="text-blue-600">International Trade</span>
+                <span className="text-blue-600">Sunrise Impex</span> – Your Trusted 
+                <span className="block">Trade Partner in UAE</span>
               </h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  At Jaishnavi Exports, we pride ourselves on being a trusted and reliable partner 
-                  in the world of international trade. With a broad portfolio of diverse products, 
-                  we cater to industries ranging from construction and health to agriculture and toys.
+                  <strong>Sunrise Impex & General Trading FZ-LLC</strong> is a premier trading company 
+                  based in the United Arab Emirates, strategically positioned in one of the world's 
+                  most dynamic trading hubs. We specialize in bridging markets across the globe, 
+                  offering a diverse portfolio of products ranging from agricultural commodities 
+                  and spices to health supplements and industrial goods.
                 </p>
                 <p>
-                  We are committed to delivering excellence, ensuring that our clients worldwide 
-                  receive high-quality goods that meet their specific needs. Our global reach and 
-                  dedication to quality make us a leader in the import-export sector.
+                  Our UAE base provides us with unparalleled access to world-class logistics, 
+                  banking, and trade infrastructure, enabling us to serve clients across the 
+                  Middle East, Africa, Europe, Asia, and the Americas with efficiency and reliability.
                 </p>
                 <p>
-                  We at Jaishnavi Exports have an UAE entity by the name of <strong>Sunrise Impex & 
-                  General Trading FZ-LLC</strong>. We have coverage in UAE from where we export 
-                  products to other parts of the world like Africa, USA, UK, Canada and the rest 
-                  of the world.
+                  As part of our commitment to serving diverse markets, we operate through our 
+                  subsidiary, <strong>Jaishnavi Exports</strong>, which handles specific regional 
+                  requirements and specialized product categories. This dual-entity structure 
+                  allows us to offer comprehensive solutions while maintaining focused expertise 
+                  in each segment.
                 </p>
               </div>
 
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">ISO Certified</span>
+                  <span className="text-sm">UAE Free Zone Company</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Fair Trade Partner</span>
+                  <span className="text-sm">Global Trade License</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Global Network</span>
+                  <span className="text-sm">Multi-Industry Expertise</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">24/7 Support</span>
+                  <span className="text-sm">24/7 Client Support</span>
                 </div>
               </div>
             </div>
@@ -185,23 +191,24 @@ export default function AboutPage() {
             <div className="relative">
               <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                  alt="Global Trade"
+                  src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                  alt="Dubai Skyline - UAE Trading Hub"
                   fill
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 
                 {/* Floating Cards */}
                 <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-xl">
+                  <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-xl">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
                         <Building2 className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <div className="text-sm text-gray-500">UAE Entity</div>
-                        <div className="text-xl font-bold text-gray-900">Sunrise Impex FZ-LLC</div>
+                        <div className="text-sm text-gray-500">Headquarters</div>
+                        <div className="text-lg font-bold text-gray-900">Sunrise Impex FZ-LLC</div>
+                        <div className="text-xs text-gray-500">Dubai, United Arab Emirates</div>
                       </div>
                     </div>
                   </div>
@@ -212,21 +219,79 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Group Structure Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-purple-100 text-purple-700 border-none px-4 py-2">
+              <Network className="h-4 w-4 mr-2" />
+              Our Group Structure
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              Integrated Network, <span className="text-purple-600">Unified Vision</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
+                  <Building2 className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Sunrise Impex FZ-LLC</h3>
+                <p className="text-sm text-blue-600 mb-4">(Parent Company - UAE)</p>
+                <p className="text-gray-600">
+                  Our flagship entity based in Dubai, handling global operations, 
+                  international logistics, and serving as the primary trading hub for 
+                  markets across Middle East, Africa, Europe, and Americas.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Badge className="bg-blue-100 text-blue-700">Global Trading</Badge>
+                  <Badge className="bg-blue-100 text-blue-700">Logistics Hub</Badge>
+                  <Badge className="bg-blue-100 text-blue-700">Strategic Location</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-green-600 to-teal-600"></div>
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-6">
+                  <Briefcase className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Jaishnavi Exports</h3>
+                <p className="text-sm text-green-600 mb-4">(Subsidiary - India Operations)</p>
+                <p className="text-gray-600">
+                  Our specialized subsidiary focused on specific regional requirements, 
+                  handling product sourcing, quality control, and serving niche markets 
+                  with dedicated expertise and local market knowledge.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Badge className="bg-green-100 text-green-700">Product Sourcing</Badge>
+                  <Badge className="bg-green-100 text-green-700">Quality Control</Badge>
+                  <Badge className="bg-green-100 text-green-700">Regional Focus</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Why Choose Us Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-blue-100 text-blue-700 border-none px-4 py-2">
               <Heart className="h-4 w-4 mr-2" />
-              Why Choose Us
+              Why Choose Sunrise Impex
             </Badge>
             <h2 className="text-4xl font-bold mb-4">
-              Our Commitment to{" "}
-              <span className="text-blue-600">Excellence</span>
+              What Makes Us <span className="text-blue-600">Different</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Our dedication to quality, sustainability, and customer satisfaction ensures that 
-              we meet the highest standards in every market we serve.
+              Our strategic location, comprehensive network, and commitment to excellence 
+              set us apart in the competitive world of international trade.
             </p>
           </div>
 
@@ -247,7 +312,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8">
             <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow overflow-hidden">
@@ -258,9 +323,9 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  To deliver excellence in international trade by providing high-quality products 
-                  that meet our clients' specific needs, while maintaining the highest standards 
-                  of quality, sustainability, and customer satisfaction.
+                  To empower global trade by providing seamless connectivity between markets, 
+                  delivering quality products with integrity, and fostering lasting partnerships 
+                  built on trust and mutual growth.
                 </p>
               </CardContent>
             </Card>
@@ -273,9 +338,9 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  To be the most trusted partner in global trade, bridging markets worldwide 
-                  through our UAE entity and beyond, while promoting sustainable and ethical 
-                  business practices.
+                  To be the most trusted bridge between Eastern and Western markets, 
+                  recognized for excellence, innovation, and our commitment to sustainable 
+                  and ethical trade practices worldwide.
                 </p>
               </CardContent>
             </Card>
@@ -286,20 +351,20 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-4">Ready to Partner With Us?</h2>
+          <h2 className="text-4xl font-bold mb-4">Ready to Start Your Global Trade Journey?</h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join our global network of satisfied clients and experience the Jaishnavi Exports difference
+            Let Sunrise Impex be your trusted partner in navigating international markets
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100 px-8">
               <Link href="/products">
-                Explore Products
+                Explore Our Products
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" className="border-2 border-white text-white hover:bg-white/10">
               <Link href="/contact">
-                Contact Us Today
+                Get in Touch
               </Link>
             </Button>
           </div>
@@ -312,7 +377,10 @@ export default function AboutPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-blue-400" />
-              <span className="font-bold text-xl">Jaishnavi Exports</span>
+              <div>
+                <span className="font-bold text-xl">Sunrise Impex & General Trading FZ-LLC</span>
+                <span className="text-sm text-gray-400 block">Your Global Trade Partner</span>
+              </div>
             </div>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center gap-2">
@@ -321,13 +389,16 @@ export default function AboutPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span>info@jaishnaviexports.com</span>
+                <span>info@sunriseimpex.ae</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400" />
-                <span>UAE & Global</span>
+                <span>Dubai, United Arab Emirates</span>
               </div>
             </div>
+          </div>
+          <div className="text-center text-xs text-gray-500 mt-4">
+            Jaishnavi Exports is a subsidiary of Sunrise Impex & General Trading FZ-LLC
           </div>
         </div>
       </section>

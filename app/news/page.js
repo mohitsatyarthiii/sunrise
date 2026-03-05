@@ -17,7 +17,6 @@ import {
   Search,
   RefreshCw,
   Filter,
-  ChevronLeft,
   ChevronRight,
   TrendingUp,
   Ship,
@@ -36,6 +35,7 @@ export default function NewsPage() {
   const [page, setPage] = useState(1);
   const [totalArticles, setTotalArticles] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [imageErrors, setImageErrors] = useState({}); // Track image errors
 
   const categories = [
     {
@@ -66,15 +66,18 @@ export default function NewsPage() {
     { id: "uae trade", name: "UAE Trade", icon: <Globe className="h-4 w-4" /> },
   ];
 
+  const fallbackImage = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
+
   const fetchNews = async (resetPage = true) => {
     setLoading(true);
     setError(null);
 
     try {
       const query = searchQuery || selectedCategory;
+      const currentPage = resetPage ? 1 : page;
 
       const response = await fetch(
-        `/api/news?q=${encodeURIComponent(query)}&page=${resetPage ? 1 : page}`,
+        `/api/news?q=${encodeURIComponent(query)}&page=${currentPage}`,
       );
 
       const data = await response.json();
@@ -93,6 +96,7 @@ export default function NewsPage() {
 
       setTotalArticles(data.totalArticles || 0);
       setLastUpdated(new Date().toLocaleString());
+      setImageErrors({}); // Reset image errors on new fetch
     } catch (err) {
       setError(err.message || "Failed to fetch news");
       console.error("News fetch error:", err);
@@ -120,6 +124,14 @@ export default function NewsPage() {
   // Refresh news
   const refreshNews = () => {
     fetchNews(true);
+  };
+
+  // Handle image error
+  const handleImageError = (articleIndex) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [articleIndex]: true
+    }));
   };
 
   // Format date
@@ -155,11 +167,21 @@ export default function NewsPage() {
     return text.substr(0, maxLength) + "...";
   };
 
-  // Get source favicon
-  const getSourceFavicon = (url) => {
+  // Get source favicon (using regular img tag to avoid Next.js optimization)
+  const SourceFavicon = ({ url }) => {
     try {
       const domain = new URL(url).hostname;
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+          alt=""
+          className="w-4 h-4 rounded-full"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+      );
     } catch {
       return null;
     }
@@ -295,44 +317,37 @@ export default function NewsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {news.map((article, index) => (
               <Card
-                key={index}
+                key={`${article.url}-${index}`}
                 className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden"
               >
                 {/* Image */}
-                <div className="relative h-48 overflow-hidden">
-                  {article.image ? (
+                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-600">
+                  {!imageErrors[index] && article.image ? (
                     <Image
                       src={article.image}
                       alt={article.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
-                      }}
+                      onError={() => handleImageError(index)}
+                      unoptimized // Skip Next.js optimization for external images
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
                       <Newspaper className="h-12 w-12 text-white/50" />
                     </div>
                   )}
 
                   {/* Source Badge */}
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-2">
-                    {getSourceFavicon(article.url) && (
-                      <img
-                        src={getSourceFavicon(article.url)}
-                        alt=""
-                        className="w-4 h-4 rounded-full"
-                      />
-                    )}
+                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-2 z-10">
+                    <SourceFavicon url={article.url} />
                     <span className="text-xs text-white font-medium">
-                      {article.source.name}
+                      {article.source?.name || 'Unknown Source'}
                     </span>
                   </div>
 
                   {/* Time Badge */}
-                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1">
+                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 z-10">
                     <span className="text-xs text-white flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatDate(article.publishedAt)}
