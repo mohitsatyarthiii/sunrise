@@ -19,7 +19,7 @@ export const metadata = {
     siteName: 'Sunrise Impex',
     images: [
       {
-        url: 'https://sunrise.com/og-image.jpg',
+        url: '/sunrise-logo.png',
         width: 1200,
         height: 630,
       },

@@ -65,7 +65,7 @@ export default function ContactPage() {
       city: "Ras Al Khaimah (UAE Headquarters)",
       address: "SBAM0345, Compass Building, AL Sahara Road, Al Hamra Industrial Zone, FZ, RAK, UAE",
       phone: "+971 58 238 1125",
-      email: "uae@jaishnaviexports.com",
+      email: "info@sunriseimpexllc.com",
       timing: "Sun - Thu: 9:00 AM - 6:00 PM",
       icon: <Building2 className="h-6 w-6" />
     },
@@ -73,7 +73,7 @@ export default function ContactPage() {
       city: "Ahmedabad Office",
       address: "320/321/322 Vishala Empire, SP Ring Road Touch, Near Dehgam Ring Road Circle, Ranasan Toll Plaza, Naroda, Ahmedabad, Gujarat 382330 India",
       phone: "+91 70487 37392",
-      email: "india@jaishnaviexports.com",
+      email: "info@sunriseimpexllc.com",
       timing: "Mon - Fri: 9:30 AM - 6:30 PM",
       icon: <Building2 className="h-6 w-6" />
     },
@@ -81,7 +81,7 @@ export default function ContactPage() {
       city: "USA Office",
       address: "8301 State Line RD. STE 220 #2632 Kansas City, Missouri 64114 Jackson, Missouri, USA",
       phone: "+1 (816) 123-4567",
-      email: "usa@jaishnaviexports.com",
+      email: "info@sunriseimpexllc.com",
       timing: "Mon - Fri: 9:00 AM - 5:30 PM (CST)",
       icon: <Building2 className="h-6 w-6" />
     }
@@ -99,8 +99,8 @@ export default function ContactPage() {
     {
       icon: <Mail className="h-6 w-6" />,
       title: "Email Us",
-      details: ["info@jaishnaviexports.com", "sales@jaishnaviexports.com"],
-      action: "mailto:info@jaishnaviexports.com",
+      details: ["info@sunriseimpexllc.com"],
+      action: "mailto:info@sunriseimpexllc.com",
       bgColor: "bg-blue-100",
       textColor: "text-blue-600"
     },

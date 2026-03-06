@@ -107,16 +107,10 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative h-8 w-8 md:h-10 md:w-10">
-              <div className="absolute inset-0 bg-blue-600 rounded-lg rotate-3 group-hover:rotate-6 transition-transform"></div>
-              <div className="absolute inset-0 bg-indigo-600 rounded-lg -rotate-3 group-hover:-rotate-6 transition-transform"></div>
-              <div className="relative h-full w-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Globe className="h-4 w-4 md:h-5 md:w-5 text-white" />
-              </div>
+            <div className="relative h-18 w-18 md:h-20 md:w-20 pt-2">
+              <img src='/sunrise-logo.png'/>
             </div>
-            <span className="font-bold text-lg md:text-xl text-gray-800">
-              Sunrise <span className="text-blue-600">Impex</span>
-            </span>
+            
           </Link>
 
           {/* Desktop Navigation */}

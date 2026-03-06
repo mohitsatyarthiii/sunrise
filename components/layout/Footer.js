@@ -48,19 +48,19 @@ const offices = [
     country: 'UAE',
     address: 'Compass Building, Al Hamra Industrial Zone, RAK',
     phone: '+971 58 238 1125',
-    email: 'uae@jaishnaviexports.com',
+    email: 'info@sunriseimpexllc.com',
   },
   {
     country: 'India',
     address: 'Vishala Empire, Naroda, Ahmedabad, Gujarat 382330',
     phone: '+91 70487 37392',
-    email: 'india@jaishnaviexports.com',
+    email: 'info@sunriseimpexllc.com',
   },
   {
     country: 'USA',
     address: '8301 State Line RD. STE 220, Kansas City, Missouri 64114',
     phone: '+1 (816) 123-4567',
-    email: 'usa@jaishnaviexports.com',
+    email: 'info@sunriseimpexllc.com',
   }
 ]
 
@@ -82,12 +82,12 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-                <Globe className="h-5 w-5 text-white" />
+              <div className="w-24 h-24  rounded-lg flex items-center justify-center shadow-lg">
+                <img
+                src='/sunrise-logo.png'
+                />
               </div>
-              <span className="font-semibold text-2xl text-white">
-                Sunrise <span className="text-blue-400">Impex</span>
-              </span>
+              
             </div>
 
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
