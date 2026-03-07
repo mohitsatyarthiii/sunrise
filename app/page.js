@@ -617,24 +617,24 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <Sun className="h-6 w-6 text-yellow-400" />
+              <img src='/sunrise-logo.png' className='w-8 h-8'/>
               <span className="font-bold text-xl">Sunrise Impex</span>
             </div>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span>+971 4 123 4567</span>
+                <span>+971 582381125</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span>info@sunriseimpex.com</span>
+                <span>info@sunriseimpexllc.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400" />
                 <span>Dubai, UAE</span>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="border-white text-white hover:bg-white/10" asChild>
+            <Button variant="outline" size="sm" className="border-white bg-blue-600 text-white " asChild>
               <Link href="/contact">Get in Touch</Link>
             </Button>
           </div>

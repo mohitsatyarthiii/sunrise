@@ -80,7 +80,6 @@ export default function ContactPage() {
     {
       city: "USA Office",
       address: "8301 State Line RD. STE 220 #2632 Kansas City, Missouri 64114 Jackson, Missouri, USA",
-      phone: "+1 (816) 123-4567",
       email: "info@sunriseimpexllc.com",
       timing: "Mon - Fri: 9:00 AM - 5:30 PM (CST)",
       icon: <Building2 className="h-6 w-6" />

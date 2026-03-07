@@ -239,7 +239,7 @@ export default function AboutPage() {
                 <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
                   <Building2 className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">Sunrise Impex FZ-LLC</h3>
+                <h3 className="text-2xl font-bold mb-3">Sunrise Impex & General Trading FZ-LLC</h3>
                 <p className="text-sm text-blue-600 mb-4">(Parent Company - UAE)</p>
                 <p className="text-gray-600">
                   Our flagship entity based in Dubai, handling global operations, 
@@ -376,7 +376,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-blue-400" />
+              <img src='/sunrise-logo.png' className='w-6 h-6'/>
               <div>
                 <span className="font-bold text-xl">Sunrise Impex & General Trading FZ-LLC</span>
                 <span className="text-sm text-gray-400 block">Your Global Trade Partner</span>
@@ -385,11 +385,11 @@ export default function AboutPage() {
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span>+971 4 123 4567</span>
+                <span>+971 582381125</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span>info@sunriseimpex.ae</span>
+                <span>info@sunriseimpexllc.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400" />

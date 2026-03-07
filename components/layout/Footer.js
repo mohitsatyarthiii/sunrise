@@ -17,20 +17,18 @@ import {
 const footerLinks = {
   company: [
     { name: 'About Us', href: '/about' },
-    { name: 'Our Team', href: '/team' },
-    { name: 'Careers', href: '/careers' },
+    { name: 'News', href: '/news' },
+    { name: 'Blogs', href: '/blog' },
     { name: 'Contact Us', href: '/contact' },
   ],
   products: [
     { name: 'All Products', href: '/products' },
-    { name: 'Textiles', href: '/categories/textiles' },
-    { name: 'Spices', href: '/categories/spices' },
-    { name: 'Handicrafts', href: '/categories/handicrafts' },
-    { name: 'Leather Goods', href: '/categories/leather-goods' },
+    { name: 'Dry Fruits & Seeds', href: '/products' },
+    { name: 'Herbal products', href: '/products' },
+    { name: 'Pulses', href: '/products' },
   ],
   support: [
     { name: 'FAQs', href: '/faqs' },
-    { name: 'Shipping Info', href: '/shipping' },
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms', href: '/terms' },
   ]
@@ -59,7 +57,6 @@ const offices = [
   {
     country: 'USA',
     address: '8301 State Line RD. STE 220, Kansas City, Missouri 64114',
-    phone: '+1 (816) 123-4567',
     email: 'info@sunriseimpexllc.com',
   }
 ]
