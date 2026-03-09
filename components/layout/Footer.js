@@ -11,7 +11,8 @@ import {
   Mail,
   MapPin,
   Globe,
-  Send
+  Send,
+  Youtube
 } from 'lucide-react'
 
 const footerLinks = {
@@ -35,10 +36,10 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { name: 'Facebook', icon: Facebook, href: 'https://facebook.com' },
-  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com' },
-  { name: 'Instagram', icon: Instagram, href: 'https://instagram.com' },
-  { name: 'LinkedIn', icon: Linkedin, href: 'https://linkedin.com' },
+  { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/sunriseimpexuae/' },
+  { name: 'Youtube', icon: Youtube, href: 'https://www.youtube.com/@SunriseImpexUAE' },
+  { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/sunrise_impex_uae/' },
+  { name: 'LinkedIn', icon: Linkedin, href: ' https://www.linkedin.com/company/107288436/admin/settings/manage-admins/' },
 ]
 
 const offices = [

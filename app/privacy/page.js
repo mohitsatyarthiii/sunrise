@@ -44,7 +44,7 @@ export default function PrivacyPage() {
                 1. Introduction
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                At Jaishnavi Exports, we respect your privacy. This policy explains how we collect, use, and protect your personal information when you use our services.
+                At Sunrise Impex & General Trading FZ-LLC, we respect your privacy. This policy explains how we collect, use, and protect your personal information when you use our services.
               </p>
             </div>
 
